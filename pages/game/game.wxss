@@ -21,9 +21,9 @@
 
 .score-text {
   font-size: 96rpx;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(232, 213, 183, 0.9);
   font-weight: bold;
-  text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.5), 0 0 40rpx rgba(180, 200, 255, 0.15);
   letter-spacing: 8rpx;
 }
 
@@ -36,33 +36,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(5, 5, 15, 0.7);
   backdrop-filter: blur(8px);
 }
 
 .over-panel {
   width: 560rpx;
   padding: 60rpx 40rpx;
-  background: linear-gradient(135deg, rgba(30, 25, 60, 0.95), rgba(50, 40, 80, 0.95));
+  background: linear-gradient(135deg, rgba(20, 18, 40, 0.95), rgba(35, 30, 55, 0.95));
   border-radius: 30rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid rgba(232, 213, 183, 0.15);
+  border: 1px solid rgba(200, 215, 240, 0.1);
+  box-shadow: 0 0 60rpx rgba(100, 120, 180, 0.1);
 }
 
 .over-title {
   font-size: 48rpx;
   color: #e8d5b7;
-  letter-spacing: 12rpx;
+  letter-spacing: 16rpx;
   margin-bottom: 30rpx;
-  text-shadow: 0 0 20px rgba(232, 213, 183, 0.2);
+  text-shadow: 0 0 30px rgba(232, 213, 183, 0.2);
 }
 
 .deco-line {
   width: 160rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent, #e8d5b7, transparent);
+  background: linear-gradient(90deg, transparent, rgba(200, 215, 240, 0.3), transparent);
   margin-bottom: 40rpx;
 }
 
@@ -76,8 +77,8 @@
 
 .over-label {
   font-size: 28rpx;
-  color: rgba(232, 213, 183, 0.6);
-  letter-spacing: 4rpx;
+  color: rgba(200, 215, 240, 0.5);
+  letter-spacing: 6rpx;
 }
 
 .over-score {
@@ -95,9 +96,9 @@
 
 .record-label {
   font-size: 32rpx;
-  color: #ff6b6b;
+  color: #ff8a6b;
   letter-spacing: 8rpx;
-  text-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+  text-shadow: 0 0 20px rgba(255, 138, 107, 0.4);
   animation: pulse 0.8s ease-in-out infinite alternate;
 }
 
@@ -109,12 +110,14 @@
 .btn-restart {
   margin-top: 40rpx;
   padding: 24rpx 100rpx;
-  background: linear-gradient(135deg, #4a3f6b, #6b5b8a);
+  background: linear-gradient(135deg, rgba(60, 50, 90, 0.9), rgba(85, 70, 110, 0.9));
   border-radius: 50rpx;
+  border: 1px solid rgba(200, 215, 240, 0.1);
   color: #e8d5b7;
   font-size: 32rpx;
   letter-spacing: 8rpx;
-  box-shadow: 0 8rpx 32rpx rgba(74, 63, 107, 0.5);
+  box-shadow: 0 8rpx 32rpx rgba(40, 30, 70, 0.5);
+  transition: transform 0.2s;
 }
 
 .btn-restart:active {
@@ -124,9 +127,9 @@
 .btn-home {
   margin-top: 20rpx;
   padding: 16rpx 60rpx;
-  color: rgba(232, 213, 183, 0.5);
+  color: rgba(200, 215, 240, 0.4);
   font-size: 26rpx;
-  letter-spacing: 4rpx;
+  letter-spacing: 6rpx;
 }
 
 .btn-home:active {

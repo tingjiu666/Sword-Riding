@@ -1,23 +1,56 @@
 <view class="container">
-  <view class="title-area">
-    <text class="title-main">御 剑 飞 行</text>
-    <text class="title-sub">Sword Riding</text>
+  <!-- 背景灵气粒子 -->
+  <view class="particle-layer">
+    <view class="particle p1"></view>
+    <view class="particle p2"></view>
+    <view class="particle p3"></view>
+    <view class="particle p4"></view>
+    <view class="particle p5"></view>
+    <view class="particle p6"></view>
+    <view class="particle p7"></view>
+    <view class="particle p8"></view>
   </view>
 
-  <view class="deco-line"></view>
+  <!-- 背景云层 -->
+  <view class="bg-cloud c1"></view>
+  <view class="bg-cloud c2"></view>
+  <view class="bg-cloud c3"></view>
 
+  <!-- 顶部装饰 -->
+  <view class="top-glow"></view>
+
+  <!-- 标题区域 -->
+  <view class="title-area">
+    <view class="sword-icon">
+      <view class="sword-blade"></view>
+      <view class="sword-guard"></view>
+      <view class="sword-handle"></view>
+      <view class="sword-glow"></view>
+    </view>
+
+    <text class="title-main">御 剑 飞 行</text>
+    <text class="title-sub">— 修 仙 之 路 —</text>
+
+    <view class="deco-line"></view>
+
+    <view class="sub-text">乘天地之正 · 御六气之辩</view>
+  </view>
+
+  <!-- 最高分 -->
   <view class="high-score" wx:if="{{highScore > 0}}">
-    <text class="score-label">最高分</text>
+    <text class="score-label">道 行</text>
     <text class="score-value">{{highScore}}</text>
   </view>
 
+  <!-- 开始按钮 -->
   <view class="btn-area">
     <view class="btn-start" bindtap="onStart">
-      <text>开 始 游 戏</text>
+      <text class="btn-text">开 始 修 炼</text>
     </view>
   </view>
 
+  <!-- 底部 -->
   <view class="footer">
-    <text class="footer-text">点击屏幕 · 御剑飞行 · 躲避障碍</text>
+    <text class="footer-text">点击御剑 · 躲避天劫 · 修仙问道</text>
   </view>
 </view>

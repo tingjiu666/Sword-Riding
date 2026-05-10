@@ -18,15 +18,18 @@ Page({
     this.h = 0
     this.frameCount = 0
     this.stars = []
+    this.spiritParticles = []
 
-    this.player = { x: 0, y: 0, vy: 0, size: 20 }
-    this.player.gravity = 0.4
-    this.player.jumpForce = -7
+    this.player = {
+      x: 0, y: 0, vy: 0,
+      size: 20,
+      gravity: 0.4,
+      jumpForce: -7,
+      baseY: 0
+    }
 
     this.obstacles = []
-    this.obstacleSpeed = 3
-    this.spawnInterval = 100
-
+    this.obstacleSpeed = 1.5
     this.clouds = []
     this.mountains = []
   },
@@ -39,64 +42,87 @@ Page({
   },
 
   initCanvas(res) {
-    const canvas = res[0].node
-    const ctx = canvas.getContext('2d')
-    this.canvas = canvas
-    this.ctx = ctx
+    try {
+      const canvas = res[0].node
+      const ctx = canvas.getContext('2d')
+      this.canvas = canvas
+      this.ctx = ctx
 
-    const sys = wx.getSystemInfoSync()
-    const dpr = sys.pixelRatio
-    this.w = res[0].width
-    this.h = res[0].height
+      const sys = wx.getSystemInfoSync()
+      const dpr = sys.pixelRatio
+      this.w = res[0].width
+      this.h = res[0].height
 
-    canvas.width = this.w * dpr
-    canvas.height = this.h * dpr
-    ctx.scale(dpr, dpr)
+      canvas.width = this.w * dpr
+      canvas.height = this.h * dpr
+      ctx.scale(dpr, dpr)
 
-    this.player.x = this.w * 0.25
-    this.player.y = this.h * 0.5
-    this.player.size = Math.min(this.w, this.h) * 0.035
-    this.player.gravity = this.h * 0.0006
-    this.player.jumpForce = -this.h * 0.012
+      this.player.x = this.w * 0.25
+      this.player.y = this.h * 0.45
+      this.player.baseY = this.player.y
+      this.player.size = Math.min(this.w, this.h) * 0.032
+      // 大幅降低重力和跳跃力，使操作更平缓
+      this.player.gravity = this.h * 0.00015
+      this.player.jumpForce = -this.h * 0.005
 
-    this.initBackground()
-    this.gameLoop()
+      this.initBackground()
+      this.gameLoop()
+    } catch (e) {
+      console.error('initCanvas error:', e)
+    }
   },
 
   initBackground() {
     this.stars = []
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 35; i++) {
       this.stars.push({
         x: Math.random() * this.w,
         y: Math.random() * this.h * 0.5,
-        r: 0.5 + Math.random() * 1.5
+        r: 0.3 + Math.random() * 1.2,
+        a: 0.3 + Math.random() * 0.7
+      })
+    }
+
+    this.spiritParticles = []
+    for (let i = 0; i < 12; i++) {
+      this.spiritParticles.push({
+        x: Math.random() * this.w,
+        y: Math.random() * this.h,
+        r: 1 + Math.random() * 2.5,
+        speed: 0.2 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2
       })
     }
 
     this.clouds = []
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       this.clouds.push({
-        x: Math.random() * this.w,
-        y: 30 + Math.random() * this.h * 0.35,
-        w: 60 + Math.random() * 80,
-        speed: 0.2 + Math.random() * 0.3
+        x: Math.random() * this.w * 1.2 - this.w * 0.2,
+        y: 30 + Math.random() * this.h * 0.3,
+        w: 50 + Math.random() * 70,
+        speed: 0.15 + Math.random() * 0.2,
+        a: 0.04 + Math.random() * 0.04
       })
     }
 
     this.mountains = []
-    const mCount = Math.ceil(this.w / 80) + 2
+    const mCount = Math.ceil(this.w / 100) + 2
     for (let i = 0; i < mCount; i++) {
       this.mountains.push({
-        x: i * (80 + Math.random() * 40),
-        h: 60 + Math.random() * 100,
-        w: 80 + Math.random() * 60
+        x: i * (90 + Math.random() * 50) - 40,
+        h: 50 + Math.random() * 80,
+        w: 90 + Math.random() * 50
       })
     }
   },
 
   gameLoop() {
-    this.update()
-    this.render()
+    try {
+      this.update()
+      this.render()
+    } catch (e) {
+      console.error('gameLoop error:', e)
+    }
     this.animationId = this.canvas.requestAnimationFrame(this.gameLoop.bind(this))
   },
 
@@ -104,89 +130,99 @@ Page({
     if (this.isGameOver) return
 
     const p = this.player
+    const h = this.h
 
-    // Player physics
+    // 缓和的物理效果
     p.vy += p.gravity
     p.y += p.vy
 
-    // Ceiling
+    // 撞顶
     if (p.y < p.size) {
       p.y = p.size
       p.vy = 0
     }
 
-    // Floor = game over
-    if (p.y > this.h - p.size) {
+    // 落地即结束
+    if (p.y > h - p.size) {
       this.endGame()
       return
     }
 
-    // Spawn obstacles
+    // 障碍物生成（降低频率）
     this.frameCount++
-    if (this.frameCount % 80 === 0) {
+    if (this.frameCount > 60 && this.frameCount % 95 === 0) {
       this.spawnObstacle()
     }
 
-    // Update obstacles
+    // 更新障碍物
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i]
       obs.x -= this.obstacleSpeed
 
-      if (!obs.passed && obs.x + obs.w < this.player.x) {
+      if (!obs.passed && obs.x + obs.w < p.x) {
         obs.passed = true
         this.score++
         this.setData({ score: this.score })
       }
 
-      if (obs.x + obs.w < 0) {
+      if (obs.x + obs.w < -20) {
         this.obstacles.splice(i, 1)
       }
     }
 
-    // Collision
     this.checkCollision()
 
-    // Update clouds
+    // 更新云朵
     for (const c of this.clouds) {
       c.x -= c.speed
-      if (c.x + c.w < -50) {
-        c.x = this.w + 30
-        c.y = 30 + Math.random() * this.h * 0.35
+      if (c.x + c.w < -60) {
+        c.x = this.w + 40
+        c.y = 30 + Math.random() * this.h * 0.3
+        c.a = 0.04 + Math.random() * 0.04
       }
     }
 
-    // Update mountains
+    // 更新山脉（慢速滚动）
     for (const m of this.mountains) {
-      m.x -= 0.5
+      m.x -= 0.3
       if (m.x + m.w < -50) {
         m.x = this.w + 30
-        m.h = 60 + Math.random() * 100
+        m.h = 50 + Math.random() * 80
+      }
+    }
+
+    // 灵气粒子浮动
+    for (const sp of this.spiritParticles) {
+      sp.y -= sp.speed
+      if (sp.y + sp.r < 0) {
+        sp.y = this.h + 5
+        sp.x = Math.random() * this.w
       }
     }
   },
 
   spawnObstacle() {
-    const gap = 120 + Math.random() * 50
-    const minTop = 50
-    const maxTop = this.h - gap - 50
+    const gap = 130 + Math.random() * 40
+    const minTop = 55
+    const maxTop = this.h - gap - 55
     const topH = minTop + Math.random() * (maxTop - minTop)
 
     this.obstacles.push({
       x: this.w,
       topH: topH,
       bottomY: topH + gap,
-      w: 25 + Math.random() * 10,
+      w: 24 + Math.random() * 8,
       passed: false
     })
   },
 
   checkCollision() {
     const p = this.player
-    const hitR = p.size * 0.6
+    const hitR = p.size * 0.5
 
     for (const obs of this.obstacles) {
       if (p.x + hitR > obs.x && p.x - hitR < obs.x + obs.w) {
-        if (p.y - hitR < obs.topH || p.y + hitR > obs.bottomY) {
+        if (p.y - hitR < obs.topH + 5 || p.y + hitR > obs.bottomY - 5) {
           this.endGame()
           return
         }
@@ -214,82 +250,129 @@ Page({
     const w = this.w
     const h = this.h
 
-    // Sky gradient
+    // === 天空背景（修仙风格渐变） ===
     const grad = ctx.createLinearGradient(0, 0, 0, h)
-    grad.addColorStop(0, '#0f0c29')
-    grad.addColorStop(0.35, '#1a1a4e')
-    grad.addColorStop(0.65, '#24243e')
-    grad.addColorStop(1, '#0f0c29')
+    grad.addColorStop(0, '#0a0a1a')
+    grad.addColorStop(0.25, '#14142e')
+    grad.addColorStop(0.5, '#1a1a3e')
+    grad.addColorStop(0.75, '#1e1830')
+    grad.addColorStop(1, '#0f0c1a')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
 
-    // Stars
-    ctx.fillStyle = 'rgba(255,255,255,0.4)'
+    // === 星辰 ===
     for (const s of this.stars) {
+      ctx.fillStyle = `rgba(255,255,255,${s.a * 0.5})`
       ctx.beginPath()
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
       ctx.fill()
     }
 
-    // Mountains
-    for (const m of this.mountains) {
+    // === 灵气粒子（上浮光点） ===
+    for (const sp of this.spiritParticles) {
+      const alpha = 0.2 + 0.3 * Math.sin(sp.phase + this.frameCount * 0.02)
+      ctx.fillStyle = `rgba(180, 220, 255, ${alpha})`
+      ctx.shadowColor = 'rgba(180, 220, 255, 0.3)'
+      ctx.shadowBlur = 8
       ctx.beginPath()
-      ctx.moveTo(m.x, h)
-      ctx.lineTo(m.x + m.w * 0.5, h - m.h)
-      ctx.lineTo(m.x + m.w, h)
-      ctx.closePath()
-      ctx.fillStyle = 'rgba(20, 18, 45, 0.6)'
+      ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2)
       ctx.fill()
     }
+    ctx.shadowBlur = 0
 
-    // Clouds
+    // === 远山（多层） ===
+    ctx.shadowBlur = 0
+    for (let layer = 0; layer < 2; layer++) {
+      const offset = layer * 30
+      const alpha = layer === 0 ? 0.15 : 0.25
+      ctx.fillStyle = `rgba(30, 35, 60, ${alpha})`
+      for (const m of this.mountains) {
+        ctx.beginPath()
+        ctx.moveTo(m.x - offset, h)
+        ctx.lineTo(m.x + m.w * 0.5 - offset, h - m.h)
+        ctx.lineTo(m.x + m.w - offset, h)
+        ctx.closePath()
+        ctx.fill()
+      }
+    }
+
+    // === 云雾 ===
     for (const c of this.clouds) {
-      ctx.fillStyle = 'rgba(232, 213, 183, 0.06)'
-      ctx.beginPath()
-      ctx.ellipse(c.x, c.y, c.w * 0.4, 12, 0, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.ellipse(c.x - c.w * 0.2, c.y - 6, c.w * 0.3, 10, 0, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.ellipse(c.x + c.w * 0.15, c.y - 4, c.w * 0.2, 8, 0, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.fillStyle = `rgba(200, 215, 240, ${c.a})`
+      this.drawCloud(ctx, c.x, c.y, c.w)
     }
 
-    // Obstacles
+    // === 障碍物（修仙石门） ===
     for (const obs of this.obstacles) {
-      // Top pillar
-      const pillarGrad = ctx.createLinearGradient(obs.x, 0, obs.x + obs.w, 0)
-      pillarGrad.addColorStop(0, '#3a2f5b')
-      pillarGrad.addColorStop(0.5, '#5a4a7a')
-      pillarGrad.addColorStop(1, '#3a2f5b')
-      ctx.fillStyle = pillarGrad
-      ctx.fillRect(obs.x, 0, obs.w, obs.topH)
-
-      // Top cap
-      ctx.fillStyle = '#6b5b8a'
-      ctx.fillRect(obs.x - 4, obs.topH - 18, obs.w + 8, 18)
-      ctx.fillStyle = 'rgba(107, 91, 138, 0.3)'
-      ctx.fillRect(obs.x - 4, obs.topH - 18, obs.w + 8, 4)
-
-      // Bottom pillar
-      ctx.fillStyle = pillarGrad
-      ctx.fillRect(obs.x, obs.bottomY, obs.w, h - obs.bottomY)
-
-      // Bottom cap
-      ctx.fillStyle = '#6b5b8a'
-      ctx.fillRect(obs.x - 4, obs.bottomY, obs.w + 8, 18)
-      ctx.fillStyle = 'rgba(107, 91, 138, 0.3)'
-      ctx.fillRect(obs.x - 4, obs.bottomY + 14, obs.w + 8, 4)
-
-      // Rune decoration
-      ctx.fillStyle = 'rgba(232, 213, 183, 0.1)'
-      ctx.fillRect(obs.x + obs.w * 0.3, obs.topH - 40, 2, 20)
-      ctx.fillRect(obs.x + obs.w * 0.3, obs.bottomY + 20, 2, 20)
+      this.drawObstacle(ctx, obs, h)
     }
 
-    // Player
+    // === 玩家（御剑飞仙） ===
     this.drawPlayer(ctx)
+
+    // === 地面微光 ===
+    ctx.fillStyle = 'rgba(100, 130, 200, 0.03)'
+    ctx.fillRect(0, h - 2, w, 2)
+  },
+
+  // 用 canvas arc 画云（替代不支持的 ellipse）
+  drawCloud(ctx, x, y, w) {
+    const r = w * 0.22
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x - r * 0.7, y + r * 0.15, r * 0.7, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x + r * 0.6, y + r * 0.1, r * 0.65, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.beginPath()
+    ctx.arc(x - r * 0.3, y - r * 0.3, r * 0.6, 0, Math.PI * 2)
+    ctx.fill()
+  },
+
+  drawObstacle(ctx, obs, h) {
+    // 上柱 - 青灰色古石门
+    const grad = ctx.createLinearGradient(obs.x, 0, obs.x + obs.w, 0)
+    grad.addColorStop(0, '#2a3a4a')
+    grad.addColorStop(0.3, '#4a5a6a')
+    grad.addColorStop(0.7, '#4a5a6a')
+    grad.addColorStop(1, '#2a3a4a')
+    ctx.fillStyle = grad
+    ctx.fillRect(obs.x, 0, obs.w, obs.topH)
+
+    // 上柱底端装饰
+    ctx.fillStyle = '#5a7a8a'
+    ctx.fillRect(obs.x - 3, obs.topH - 16, obs.w + 6, 16)
+
+    // 符文纹路
+    ctx.fillStyle = 'rgba(150, 200, 220, 0.15)'
+    for (let i = 0; i < 3; i++) {
+      const ry = 20 + i * 25
+      if (ry < obs.topH - 20) {
+        ctx.fillRect(obs.x + obs.w * 0.3, ry, 2, 12)
+        ctx.fillRect(obs.x + obs.w * 0.6, ry + 6, 2, 12)
+      }
+    }
+
+    // 下柱
+    ctx.fillStyle = grad
+    ctx.fillRect(obs.x, obs.bottomY, obs.w, h - obs.bottomY)
+
+    // 下柱顶端装饰
+    ctx.fillStyle = '#5a7a8a'
+    ctx.fillRect(obs.x - 3, obs.bottomY, obs.w + 6, 16)
+
+    // 下柱符文
+    ctx.fillStyle = 'rgba(150, 200, 220, 0.15)'
+    for (let i = 0; i < 3; i++) {
+      const ry = obs.bottomY + 25 + i * 25
+      if (ry < h - 20) {
+        ctx.fillRect(obs.x + obs.w * 0.3, ry, 2, 12)
+        ctx.fillRect(obs.x + obs.w * 0.6, ry + 6, 2, 12)
+      }
+    }
   },
 
   drawPlayer(ctx) {
@@ -297,66 +380,56 @@ Page({
     ctx.save()
     ctx.translate(p.x, p.y)
 
-    const tilt = Math.min(Math.max(p.vy * 0.03, -0.4), 0.4)
+    // 飞行倾斜随速度变化（幅度减小）
+    const tilt = Math.min(Math.max(p.vy * 0.015, -0.25), 0.25)
     ctx.rotate(tilt)
 
     const s = p.size
 
-    // Sword glow
-    ctx.shadowColor = 'rgba(150, 150, 255, 0.2)'
-    ctx.shadowBlur = s * 0.5
+    // === 御剑灵光 ===
+    ctx.shadowColor = 'rgba(150, 180, 255, 0.3)'
+    ctx.shadowBlur = s * 0.8
 
-    // Sword blade
-    ctx.strokeStyle = '#a8b4c8'
+    // === 飞剑剑身 ===
+    const bladeGrad = ctx.createLinearGradient(-s * 1.5, 0, s * 1.3, 0)
+    bladeGrad.addColorStop(0, '#7a8aa0')
+    bladeGrad.addColorStop(0.3, '#b8c8e0')
+    bladeGrad.addColorStop(0.7, '#b8c8e0')
+    bladeGrad.addColorStop(1, '#7a8aa0')
+    ctx.strokeStyle = bladeGrad
     ctx.lineWidth = 2.5
     ctx.beginPath()
-    ctx.moveTo(-s * 1.4, 0)
-    ctx.lineTo(s * 1.2, 0)
+    ctx.moveTo(-s * 1.5, 0)
+    ctx.lineTo(s * 1.3, 0)
     ctx.stroke()
 
-    // Sword center glow
-    ctx.strokeStyle = 'rgba(200, 200, 255, 0.15)'
-    ctx.lineWidth = 6
+    // 剑身光晕
+    ctx.shadowBlur = s
+    ctx.strokeStyle = 'rgba(180, 200, 255, 0.08)'
+    ctx.lineWidth = 8
     ctx.beginPath()
-    ctx.moveTo(-s * 1.4, 0)
-    ctx.lineTo(s * 1.2, 0)
+    ctx.moveTo(-s * 1.5, 0)
+    ctx.lineTo(s * 1.3, 0)
     ctx.stroke()
-
     ctx.shadowBlur = 0
 
-    // Sword guard
-    ctx.fillStyle = '#8B4513'
-    ctx.fillRect(-s * 1.55, -s * 0.15, s * 0.25, s * 0.3)
+    // 剑格（护手）
+    ctx.fillStyle = '#5a4030'
+    ctx.fillRect(-s * 1.65, -s * 0.12, s * 0.2, s * 0.24)
+    ctx.fillStyle = '#8a6a50'
+    ctx.fillRect(-s * 1.6, -s * 0.08, s * 0.1, s * 0.16)
 
-    // Character body
-    ctx.fillStyle = '#e8d5b7'
-    ctx.fillRect(-s * 0.35, -s * 1.3, s * 0.7, s * 0.9)
-
-    // Head
+    // 剑穗
+    ctx.strokeStyle = '#c04040'
+    ctx.lineWidth = 1.2
     ctx.beginPath()
-    ctx.arc(0, -s * 1.55, s * 0.35, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.moveTo(-s * 1.6, s * 0.12)
+    ctx.quadraticCurveTo(-s * 1.8, s * 0.4, -s * 1.6, s * 0.6)
+    ctx.stroke()
 
-    // Hair bun
-    ctx.fillStyle = '#2c1810'
-    ctx.beginPath()
-    ctx.arc(0, -s * 1.65, s * 0.35, Math.PI, 0)
-    ctx.fill()
-    // Top bun
-    ctx.beginPath()
-    ctx.arc(0, -s * 1.75, s * 0.12, 0, Math.PI * 2)
-    ctx.fill()
-
-    // Hair tail
-    ctx.beginPath()
-    ctx.moveTo(s * 0.15, -s * 1.6)
-    ctx.lineTo(s * 0.35, -s * 1.3)
-    ctx.lineTo(s * 0.1, -s * 1.35)
-    ctx.closePath()
-    ctx.fill()
-
-    // Robe
-    ctx.fillStyle = '#6b5b8a'
+    // === 人物躯干 ===
+    // 上衣（道袍）
+    ctx.fillStyle = '#4a5a7a'
     ctx.beginPath()
     ctx.moveTo(-s * 0.35, -s * 0.4)
     ctx.lineTo(-s * 0.5, s * 0.15)
@@ -365,30 +438,92 @@ Page({
     ctx.closePath()
     ctx.fill()
 
-    // Robe detail
-    ctx.strokeStyle = 'rgba(232, 213, 183, 0.2)'
+    // 衣襟
+    ctx.strokeStyle = 'rgba(200, 215, 240, 0.15)'
     ctx.lineWidth = 0.5
     ctx.beginPath()
     ctx.moveTo(0, -s * 0.4)
     ctx.lineTo(0, s * 0.15)
     ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(-s * 0.15, -s * 0.4)
+    ctx.lineTo(-s * 0.2, s * 0.15)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.moveTo(s * 0.15, -s * 0.4)
+    ctx.lineTo(s * 0.2, s * 0.15)
+    ctx.stroke()
 
-    // Arm (right - reaching forward)
+    // 腰带
+    ctx.fillStyle = '#6a5a4a'
+    ctx.fillRect(-s * 0.4, -s * 0.2, s * 0.8, s * 0.08)
+
+    // 身体（肤色基础）
+    ctx.fillStyle = '#e8d5b7'
+    ctx.fillRect(-s * 0.3, -s * 1.2, s * 0.6, s * 0.85)
+
+    // 头部
+    ctx.beginPath()
+    ctx.arc(0, -s * 1.45, s * 0.32, 0, Math.PI * 2)
+    ctx.fill()
+
+    // 发髻
+    ctx.fillStyle = '#1a1010'
+    ctx.beginPath()
+    ctx.arc(0, -s * 1.55, s * 0.32, Math.PI, 0)
+    ctx.fill()
+    // 发髻顶
+    ctx.beginPath()
+    ctx.arc(0, -s * 1.68, s * 0.1, 0, Math.PI * 2)
+    ctx.fill()
+
+    // 飘发
+    ctx.beginPath()
+    ctx.moveTo(-s * 0.25, -s * 1.5)
+    ctx.quadraticCurveTo(-s * 0.5, -s * 1.2, -s * 0.3, -s * 0.9)
+    ctx.lineTo(-s * 0.2, -s * 0.95)
+    ctx.quadraticCurveTo(-s * 0.35, -s * 1.2, -s * 0.15, -s * 1.45)
+    ctx.closePath()
+    ctx.fill()
+
+    // 右臂（前伸御剑）
     ctx.strokeStyle = '#e8d5b7'
-    ctx.lineWidth = s * 0.15
+    ctx.lineWidth = s * 0.13
     ctx.lineCap = 'round'
     ctx.beginPath()
-    ctx.moveTo(s * 0.2, -s * 0.9)
-    ctx.lineTo(s * 0.7, -s * 1.1)
+    ctx.moveTo(s * 0.2, -s * 0.85)
+    ctx.quadraticCurveTo(s * 0.5, -s * 1.0, s * 0.7, -s * 0.9)
     ctx.stroke()
 
-    // Sleeve
-    ctx.strokeStyle = '#6b5b8a'
-    ctx.lineWidth = s * 0.22
+    // 袖子（飘逸）
+    ctx.strokeStyle = '#4a5a7a'
+    ctx.lineWidth = s * 0.2
     ctx.beginPath()
-    ctx.moveTo(s * 0.15, -s * 0.85)
-    ctx.lineTo(s * 0.65, -s * 1.05)
+    ctx.moveTo(s * 0.15, -s * 0.8)
+    ctx.quadraticCurveTo(s * 0.5, -s * 1.05, s * 0.75, -s * 0.85)
     ctx.stroke()
+    ctx.lineCap = 'butt'
+
+    // 左臂（负手身后）
+    ctx.strokeStyle = '#4a5a7a'
+    ctx.lineWidth = s * 0.16
+    ctx.beginPath()
+    ctx.moveTo(-s * 0.25, -s * 0.8)
+    ctx.quadraticCurveTo(-s * 0.5, -s * 0.6, -s * 0.45, -s * 0.3)
+    ctx.stroke()
+
+    // === 飞剑拖尾灵气 ===
+    if (!this.isGameOver) {
+      ctx.shadowBlur = 0
+      const trailAlpha = 0.1 + 0.05 * Math.sin(this.frameCount * 0.1)
+      ctx.fillStyle = `rgba(150, 200, 255, ${trailAlpha})`
+      ctx.beginPath()
+      ctx.arc(-s * 1.8, 0, s * 0.3 + Math.sin(this.frameCount * 0.15) * s * 0.1, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(-s * 2.2, s * 0.1, s * 0.2, 0, Math.PI * 2)
+      ctx.fill()
+    }
 
     ctx.restore()
   },
@@ -402,7 +537,7 @@ Page({
     this.isGameOver = false
     this.score = 0
     this.frameCount = 0
-    this.player.y = this.h * 0.5
+    this.player.y = this.h * 0.45
     this.player.vy = 0
     this.obstacles = []
     this.setData({
@@ -417,7 +552,7 @@ Page({
   },
 
   onUnload() {
-    if (this.animationId) {
+    if (this.animationId && this.canvas) {
       this.canvas.cancelAnimationFrame(this.animationId)
     }
   }
