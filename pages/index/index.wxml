@@ -1,5 +1,12 @@
 <view class="container">
-  <!-- 背景灵气粒子 -->
+  <!-- 星空 -->
+  <view class="star-layer">
+    <view class="star" wx:for="{{stars}}" wx:key="index"
+      style="left: {{item.x}}%; top: {{item.y}}%; width: {{item.s}}rpx; height: {{item.s}}rpx; animation-delay: {{item.d}}s; opacity: {{item.o}};">
+    </view>
+  </view>
+
+  <!-- 灵气粒子 -->
   <view class="particle-layer">
     <view class="particle p1"></view>
     <view class="particle p2"></view>
@@ -11,46 +18,61 @@
     <view class="particle p8"></view>
   </view>
 
+  <!-- 远山剪影 -->
+  <view class="mountain m1"></view>
+  <view class="mountain m2"></view>
+  <view class="mountain m3"></view>
+
   <!-- 背景云层 -->
   <view class="bg-cloud c1"></view>
   <view class="bg-cloud c2"></view>
   <view class="bg-cloud c3"></view>
 
-  <!-- 顶部装饰 -->
+  <!-- 顶部光晕 -->
   <view class="top-glow"></view>
 
   <!-- 标题区域 -->
   <view class="title-area">
+    <!-- 飞剑图标 -->
     <view class="sword-icon">
+      <view class="sword-ring"></view>
       <view class="sword-blade"></view>
       <view class="sword-guard"></view>
       <view class="sword-handle"></view>
+      <view class="sword-tassel"></view>
       <view class="sword-glow"></view>
+      <view class="sword-glow2"></view>
     </view>
 
-    <text class="title-main">御 剑 飞 行</text>
+    <text class="title-chinese">御剑飞行</text>
     <text class="title-sub">— 修 仙 之 路 —</text>
 
-    <view class="deco-line"></view>
+    <view class="deco-line">
+      <view class="deco-dot"></view>
+    </view>
 
-    <view class="sub-text">乘天地之正 · 御六气之辩</view>
+    <text class="sub-text">乘天地之正 · 御六气之辩</text>
   </view>
 
   <!-- 最高分 -->
   <view class="high-score" wx:if="{{highScore > 0}}">
-    <text class="score-label">道 行</text>
-    <text class="score-value">{{highScore}}</text>
+    <text class="score-label">道  行</text>
+    <view class="score-value-wrap">
+      <text class="score-value">{{highScore}}</text>
+      <text class="score-unit">年</text>
+    </view>
   </view>
 
   <!-- 开始按钮 -->
   <view class="btn-area">
     <view class="btn-start" bindtap="onStart">
+      <view class="btn-bg"></view>
       <text class="btn-text">开 始 修 炼</text>
     </view>
   </view>
 
   <!-- 底部 -->
   <view class="footer">
-    <text class="footer-text">点击御剑 · 躲避天劫 · 修仙问道</text>
+    <text class="footer-text">点击御剑 · 躲避天劫 · 问道长生</text>
   </view>
 </view>

@@ -8,7 +8,58 @@
   padding: 40rpx;
   box-sizing: border-box;
   overflow: hidden;
-  background: linear-gradient(180deg, #0a0a1a 0%, #14142e 30%, #1a1a3e 60%, #1e1830 100%);
+  background: linear-gradient(180deg, #080818 0%, #101030 25%, #181840 50%, #1c1835 75%, #0f0c20 100%);
+}
+
+/* === 星空 === */
+.star-layer {
+  position: absolute;
+  width: 100%;
+  height: 55%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: twinkle 2s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.2; transform: scale(1); }
+  100% { opacity: 0.8; transform: scale(1.3); }
+}
+
+/* === 远山剪影 === */
+.mountain {
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.m1 {
+  left: 0;
+  border-left: 200rpx solid transparent;
+  border-right: 300rpx solid transparent;
+  border-bottom: 180rpx solid rgba(20, 18, 40, 0.5);
+}
+
+.m2 {
+  left: 150rpx;
+  border-left: 250rpx solid transparent;
+  border-right: 200rpx solid transparent;
+  border-bottom: 250rpx solid rgba(25, 22, 45, 0.4);
+}
+
+.m3 {
+  right: 0;
+  border-left: 300rpx solid transparent;
+  border-right: 200rpx solid transparent;
+  border-bottom: 200rpx solid rgba(18, 16, 38, 0.45);
 }
 
 /* === 顶部光晕 === */
@@ -17,7 +68,7 @@
   top: -100rpx;
   width: 600rpx;
   height: 300rpx;
-  background: radial-gradient(ellipse, rgba(150, 180, 255, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse, rgba(150, 180, 255, 0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -33,23 +84,23 @@
 .particle {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(180, 220, 255, 0.6), transparent);
+  background: radial-gradient(circle, rgba(180, 220, 255, 0.5), transparent);
   animation: float-up linear infinite;
 }
 
-.p1 { width: 6rpx; height: 6rpx; left: 10%; bottom: -10%; animation-duration: 8s; animation-delay: 0s; }
-.p2 { width: 4rpx; height: 4rpx; left: 25%; bottom: -10%; animation-duration: 10s; animation-delay: 1s; }
-.p3 { width: 8rpx; height: 8rpx; left: 40%; bottom: -10%; animation-duration: 7s; animation-delay: 3s; }
-.p4 { width: 3rpx; height: 3rpx; left: 55%; bottom: -10%; animation-duration: 12s; animation-delay: 0.5s; }
-.p5 { width: 5rpx; height: 5rpx; left: 70%; bottom: -10%; animation-duration: 9s; animation-delay: 2s; }
-.p6 { width: 7rpx; height: 7rpx; left: 82%; bottom: -10%; animation-duration: 11s; animation-delay: 4s; }
-.p7 { width: 4rpx; height: 4rpx; left: 15%; bottom: -10%; animation-duration: 13s; animation-delay: 1.5s; }
-.p8 { width: 6rpx; height: 6rpx; left: 90%; bottom: -10%; animation-duration: 9s; animation-delay: 3.5s; }
+.p1 { width: 6rpx; height: 6rpx; left: 10%; bottom: -10%; animation-duration: 10s; animation-delay: 0s; }
+.p2 { width: 4rpx; height: 4rpx; left: 25%; bottom: -10%; animation-duration: 12s; animation-delay: 1.5s; }
+.p3 { width: 8rpx; height: 8rpx; left: 40%; bottom: -10%; animation-duration: 9s; animation-delay: 3s; }
+.p4 { width: 3rpx; height: 3rpx; left: 55%; bottom: -10%; animation-duration: 14s; animation-delay: 0.5s; }
+.p5 { width: 5rpx; height: 5rpx; left: 70%; bottom: -10%; animation-duration: 11s; animation-delay: 2s; }
+.p6 { width: 7rpx; height: 7rpx; left: 82%; bottom: -10%; animation-duration: 13s; animation-delay: 4s; }
+.p7 { width: 4rpx; height: 4rpx; left: 15%; bottom: -10%; animation-duration: 15s; animation-delay: 1s; }
+.p8 { width: 6rpx; height: 6rpx; left: 90%; bottom: -10%; animation-duration: 11s; animation-delay: 3.5s; }
 
 @keyframes float-up {
   0% { transform: translateY(0) scale(1); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.6; }
+  8% { opacity: 0.8; }
+  85% { opacity: 0.4; }
   100% { transform: translateY(-110vh) scale(1.5); opacity: 0; }
 }
 
@@ -57,33 +108,33 @@
 .bg-cloud {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(200, 215, 240, 0.04), transparent);
+  background: radial-gradient(circle, rgba(200, 215, 240, 0.03), transparent);
   pointer-events: none;
   animation: cloud-drift linear infinite;
 }
 
 .c1 {
   width: 400rpx; height: 80rpx;
-  top: 25%; left: -10%;
-  animation-duration: 25s;
+  top: 30%; left: -10%;
+  animation-duration: 30s;
 }
 .c2 {
   width: 500rpx; height: 100rpx;
-  top: 45%; left: 20%;
-  animation-duration: 35s;
-  animation-delay: -10s;
+  top: 50%; left: 20%;
+  animation-duration: 40s;
+  animation-delay: -12s;
 }
 .c3 {
   width: 350rpx; height: 70rpx;
-  top: 60%; left: -5%;
-  animation-duration: 30s;
-  animation-delay: -5s;
+  top: 65%; left: -5%;
+  animation-duration: 35s;
+  animation-delay: -6s;
 }
 
 @keyframes cloud-drift {
   0% { transform: translateX(0); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 0.6; }
+  12% { opacity: 0.8; }
+  85% { opacity: 0.4; }
   100% { transform: translateX(120vw); opacity: 0; }
 }
 
@@ -93,15 +144,34 @@
   flex-direction: column;
   align-items: center;
   z-index: 1;
-  margin-bottom: 40rpx;
+  margin-bottom: 30rpx;
 }
 
 /* 剑图标 */
 .sword-icon {
   position: relative;
   width: 100rpx;
-  height: 180rpx;
-  margin-bottom: 30rpx;
+  height: 200rpx;
+  margin-bottom: 24rpx;
+}
+
+/* 剑灵气光环 */
+.sword-ring {
+  position: absolute;
+  top: 20rpx;
+  left: 18rpx;
+  width: 64rpx;
+  height: 64rpx;
+  border: 1.5rpx solid rgba(180, 210, 255, 0.15);
+  border-radius: 50%;
+  animation: ring-rotate 4s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes ring-rotate {
+  0% { transform: rotate(0deg) scale(1); opacity: 0.6; }
+  50% { transform: rotate(180deg) scale(1.3); opacity: 0.3; }
+  100% { transform: rotate(360deg) scale(1); opacity: 0.6; }
 }
 
 .sword-blade {
@@ -109,83 +179,127 @@
   top: 0;
   left: 44rpx;
   width: 12rpx;
-  height: 110rpx;
-  background: linear-gradient(180deg, #b8c8e0, #7a8aa0);
+  height: 120rpx;
+  background: linear-gradient(180deg, #d0e0f0, #8a9ab0);
   border-radius: 2rpx;
-  box-shadow: 0 0 20rpx rgba(180, 200, 255, 0.3);
-  animation: sword-gleam 2s ease-in-out infinite alternate;
+  box-shadow: 0 0 30rpx rgba(180, 200, 255, 0.25);
+  animation: sword-gleam 2.5s ease-in-out infinite alternate;
 }
 
 .sword-guard {
   position: absolute;
-  top: 108rpx;
-  left: 28rpx;
-  width: 44rpx;
+  top: 118rpx;
+  left: 26rpx;
+  width: 48rpx;
   height: 8rpx;
-  background: linear-gradient(90deg, #5a4030, #8a6a50, #5a4030);
+  background: linear-gradient(90deg, #4a3a2a, #8a6a50, #4a3a2a);
   border-radius: 2rpx;
 }
 
 .sword-handle {
   position: absolute;
-  top: 116rpx;
+  top: 126rpx;
   left: 46rpx;
   width: 8rpx;
-  height: 30rpx;
-  background: linear-gradient(180deg, #6a5a4a, #4a3a2a);
+  height: 32rpx;
+  background: linear-gradient(180deg, #6a5a4a, #3a2a1a);
   border-radius: 2rpx;
+}
+
+.sword-tassel {
+  position: absolute;
+  top: 156rpx;
+  left: 48rpx;
+  width: 4rpx;
+  height: 30rpx;
+  background: linear-gradient(180deg, #c04040, transparent);
+  border-radius: 2rpx;
+  opacity: 0.6;
+  animation: tassel-sway 2s ease-in-out infinite alternate;
+}
+
+@keyframes tassel-sway {
+  0% { transform: rotate(-5deg) translateX(-2rpx); }
+  100% { transform: rotate(5deg) translateX(2rpx); }
 }
 
 .sword-glow {
   position: absolute;
-  top: 30rpx;
-  left: 35rpx;
-  width: 30rpx;
-  height: 60rpx;
-  background: radial-gradient(ellipse, rgba(180, 200, 255, 0.15), transparent);
+  top: 20rpx;
+  left: 30rpx;
+  width: 40rpx;
+  height: 80rpx;
+  background: radial-gradient(ellipse, rgba(180, 210, 255, 0.12), transparent);
   pointer-events: none;
-  animation: glow-pulse 2s ease-in-out infinite alternate;
+  animation: glow-pulse 2.5s ease-in-out infinite alternate;
+}
+
+.sword-glow2 {
+  position: absolute;
+  top: -10rpx;
+  left: 20rpx;
+  width: 60rpx;
+  height: 60rpx;
+  background: radial-gradient(circle, rgba(200, 230, 255, 0.05), transparent 70%);
+  pointer-events: none;
+  animation: glow-expand 3s ease-in-out infinite alternate;
 }
 
 @keyframes sword-gleam {
-  0% { box-shadow: 0 0 20rpx rgba(180, 200, 255, 0.2); }
-  100% { box-shadow: 0 0 40rpx rgba(180, 200, 255, 0.5); }
+  0% { box-shadow: 0 0 20rpx rgba(180, 200, 255, 0.15); }
+  100% { box-shadow: 0 0 50rpx rgba(180, 200, 255, 0.4); }
 }
 
 @keyframes glow-pulse {
-  0% { transform: scale(1); opacity: 0.5; }
-  100% { transform: scale(1.3); opacity: 1; }
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.2); opacity: 0.8; }
 }
 
-.title-main {
-  font-size: 76rpx;
+@keyframes glow-expand {
+  0% { transform: scale(1); opacity: 0.3; }
+  100% { transform: scale(1.5); opacity: 0.6; }
+}
+
+.title-chinese {
+  font-size: 80rpx;
   color: #e8d5b7;
-  letter-spacing: 28rpx;
+  letter-spacing: 24rpx;
   text-shadow:
-    0 0 40rpx rgba(232, 213, 183, 0.3),
-    0 4rpx 8rpx rgba(0, 0, 0, 0.3);
+    0 0 50rpx rgba(232, 213, 183, 0.25),
+    0 4rpx 12rpx rgba(0, 0, 0, 0.4);
   font-weight: bold;
+  margin-bottom: 12rpx;
 }
 
 .title-sub {
-  font-size: 26rpx;
-  color: rgba(200, 215, 240, 0.5);
-  letter-spacing: 12rpx;
-  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: rgba(200, 215, 240, 0.45);
+  letter-spacing: 14rpx;
 }
 
 .deco-line {
-  width: 240rpx;
+  position: relative;
+  width: 260rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent, rgba(200, 215, 240, 0.3), transparent);
-  margin-top: 24rpx;
-  margin-bottom: 16rpx;
+  background: linear-gradient(90deg, transparent, rgba(200, 215, 240, 0.25), transparent);
+  margin-top: 20rpx;
+  margin-bottom: 14rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.deco-dot {
+  width: 6rpx;
+  height: 6rpx;
+  background: rgba(200, 215, 240, 0.3);
+  border-radius: 50%;
+  margin-top: -2rpx;
 }
 
 .sub-text {
-  font-size: 22rpx;
-  color: rgba(200, 215, 240, 0.35);
-  letter-spacing: 6rpx;
+  font-size: 20rpx;
+  color: rgba(200, 215, 240, 0.3);
+  letter-spacing: 8rpx;
 }
 
 /* === 最高分 === */
@@ -194,22 +308,35 @@
   flex-direction: column;
   align-items: center;
   z-index: 1;
-  margin-bottom: 60rpx;
+  margin-bottom: 50rpx;
 }
 
 .score-label {
-  font-size: 24rpx;
-  color: rgba(200, 215, 240, 0.5);
-  letter-spacing: 6rpx;
+  font-size: 22rpx;
+  color: rgba(200, 215, 240, 0.4);
+  letter-spacing: 10rpx;
+  margin-bottom: 6rpx;
+}
+
+.score-value-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
 }
 
 .score-value {
-  font-size: 72rpx;
+  font-size: 76rpx;
   color: #ffd700;
   font-weight: bold;
   text-shadow:
-    0 0 30rpx rgba(255, 215, 0, 0.3),
-    0 0 60rpx rgba(255, 215, 0, 0.1);
+    0 0 40rpx rgba(255, 215, 0, 0.25),
+    0 0 80rpx rgba(255, 215, 0, 0.1);
+}
+
+.score-unit {
+  font-size: 24rpx;
+  color: rgba(200, 215, 240, 0.35);
+  letter-spacing: 4rpx;
 }
 
 /* === 开始按钮 === */
@@ -218,56 +345,53 @@
 }
 
 .btn-start {
-  padding: 26rpx 110rpx;
-  background: linear-gradient(135deg,
-    rgba(60, 50, 90, 0.8),
-    rgba(90, 75, 120, 0.8)
-  );
-  border-radius: 50rpx;
-  border: 1px solid rgba(200, 215, 240, 0.15);
-  box-shadow:
-    0 8rpx 32rpx rgba(60, 50, 90, 0.4),
-    inset 0 1rpx 0 rgba(255, 255, 255, 0.05);
-  transition: transform 0.2s;
   position: relative;
+  padding: 24rpx 110rpx;
+  border-radius: 50rpx;
   overflow: hidden;
+  transition: transform 0.2s;
 }
 
-.btn-start::before {
-  content: '';
+.btn-bg {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 30% 50%, rgba(180, 200, 255, 0.05), transparent 60%);
-  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(55, 45, 85, 0.85), rgba(85, 70, 115, 0.85));
+  border: 1px solid rgba(200, 215, 240, 0.12);
+  box-shadow:
+    0 6rpx 30rpx rgba(45, 35, 75, 0.5),
+    inset 0 1rpx 0 rgba(255, 255, 255, 0.06);
+  border-radius: 50rpx;
 }
 
 .btn-text {
+  position: relative;
   font-size: 34rpx;
   color: #e8d5b7;
-  letter-spacing: 12rpx;
+  letter-spacing: 14rpx;
   text-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.3);
+  z-index: 1;
 }
 
 .btn-start:active {
   transform: scale(0.95);
-  background: linear-gradient(135deg,
-    rgba(70, 60, 100, 0.9),
-    rgba(100, 85, 130, 0.9)
-  );
+}
+
+.btn-start:active .btn-bg {
+  background: linear-gradient(135deg, rgba(65, 55, 95, 0.9), rgba(95, 80, 125, 0.9));
 }
 
 /* === 底部 === */
 .footer {
   position: absolute;
-  bottom: 60rpx;
+  bottom: 50rpx;
   z-index: 1;
 }
 
 .footer-text {
-  font-size: 22rpx;
-  color: rgba(200, 215, 240, 0.2);
-  letter-spacing: 6rpx;
+  font-size: 20rpx;
+  color: rgba(200, 215, 240, 0.18);
+  letter-spacing: 8rpx;
 }
