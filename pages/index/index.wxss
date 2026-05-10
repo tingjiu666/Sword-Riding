@@ -1,0 +1,89 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.title-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 60rpx;
+}
+
+.title-main {
+  font-size: 72rpx;
+  color: #e8d5b7;
+  letter-spacing: 24rpx;
+  text-shadow: 0 0 30px rgba(232, 213, 183, 0.3);
+  font-weight: bold;
+}
+
+.title-sub {
+  font-size: 28rpx;
+  color: rgba(232, 213, 183, 0.5);
+  letter-spacing: 8rpx;
+  margin-top: 16rpx;
+}
+
+.deco-line {
+  width: 200rpx;
+  height: 2rpx;
+  background: linear-gradient(90deg, transparent, #e8d5b7, transparent);
+  margin-bottom: 60rpx;
+}
+
+.high-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 80rpx;
+}
+
+.score-label {
+  font-size: 24rpx;
+  color: rgba(232, 213, 183, 0.6);
+  letter-spacing: 4rpx;
+}
+
+.score-value {
+  font-size: 64rpx;
+  color: #ffd700;
+  font-weight: bold;
+  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.btn-area {
+  margin-bottom: 100rpx;
+}
+
+.btn-start {
+  padding: 28rpx 120rpx;
+  background: linear-gradient(135deg, #4a3f6b, #6b5b8a);
+  border-radius: 50rpx;
+  color: #e8d5b7;
+  font-size: 36rpx;
+  letter-spacing: 12rpx;
+  box-shadow: 0 8rpx 32rpx rgba(74, 63, 107, 0.5);
+  transition: transform 0.2s;
+}
+
+.btn-start:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 16rpx rgba(74, 63, 107, 0.3);
+}
+
+.footer {
+  position: absolute;
+  bottom: 80rpx;
+}
+
+.footer-text {
+  font-size: 22rpx;
+  color: rgba(232, 213, 183, 0.3);
+  letter-spacing: 6rpx;
+}

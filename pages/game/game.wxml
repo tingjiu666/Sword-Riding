@@ -1,0 +1,36 @@
+<view class="game-container">
+  <canvas
+    type="2d"
+    id="gameCanvas"
+    class="game-canvas"
+    bindtouchstart="onTap"
+  ></canvas>
+
+  <view class="score-overlay" wx:if="{{!gameOver}}">
+    <text class="score-text">{{score}}</text>
+  </view>
+
+  <view class="game-over-overlay" wx:if="{{gameOver}}">
+    <view class="over-panel">
+      <text class="over-title">游 戏 结 束</text>
+      <view class="deco-line"></view>
+      <view class="score-row">
+        <text class="over-label">得分</text>
+        <text class="over-score">{{score}}</text>
+      </view>
+      <view class="score-row" wx:if="{{isNewRecord}}">
+        <text class="record-label">新纪录!</text>
+      </view>
+      <view class="score-row">
+        <text class="over-label">最高分</text>
+        <text class="over-highscore">{{highScore}}</text>
+      </view>
+      <view class="btn-restart" bindtap="onRestart">
+        <text>再 来 一 局</text>
+      </view>
+      <view class="btn-home" bindtap="onHome">
+        <text>返回首页</text>
+      </view>
+    </view>
+  </view>
+</view>

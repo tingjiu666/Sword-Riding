@@ -1,0 +1,23 @@
+<view class="container">
+  <view class="title-area">
+    <text class="title-main">御 剑 飞 行</text>
+    <text class="title-sub">Sword Riding</text>
+  </view>
+
+  <view class="deco-line"></view>
+
+  <view class="high-score" wx:if="{{highScore > 0}}">
+    <text class="score-label">最高分</text>
+    <text class="score-value">{{highScore}}</text>
+  </view>
+
+  <view class="btn-area">
+    <view class="btn-start" bindtap="onStart">
+      <text>开 始 游 戏</text>
+    </view>
+  </view>
+
+  <view class="footer">
+    <text class="footer-text">点击屏幕 · 御剑飞行 · 躲避障碍</text>
+  </view>
+</view>
