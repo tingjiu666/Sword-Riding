@@ -1,12 +1,20 @@
 <view class="container">
-  <!-- 星空 -->
+  <!-- 水墨背景层 -->
+  <view class="ink-bg-layer">
+    <view class="ink-splash i1"></view>
+    <view class="ink-splash i2"></view>
+    <view class="ink-splash i3"></view>
+    <view class="ink-splash i4"></view>
+  </view>
+
+  <!-- 星空（暖金） -->
   <view class="star-layer">
     <view class="star" wx:for="{{stars}}" wx:key="index"
       style="left: {{item.x}}%; top: {{item.y}}%; width: {{item.s}}rpx; height: {{item.s}}rpx; animation-delay: {{item.d}}s; opacity: {{item.o}};">
     </view>
   </view>
 
-  <!-- 灵气粒子 -->
+  <!-- 金尘粒子 -->
   <view class="particle-layer">
     <view class="particle p1"></view>
     <view class="particle p2"></view>
@@ -18,61 +26,90 @@
     <view class="particle p8"></view>
   </view>
 
-  <!-- 远山剪影 -->
-  <view class="mountain m1"></view>
-  <view class="mountain m2"></view>
-  <view class="mountain m3"></view>
+  <!-- 远山剪影（多层水墨） -->
+  <view class="mountain-range">
+    <view class="mountain m3"></view>
+    <view class="mountain m2"></view>
+    <view class="mountain m1"></view>
+  </view>
 
-  <!-- 背景云层 -->
+  <!-- 背景云霭 -->
   <view class="bg-cloud c1"></view>
   <view class="bg-cloud c2"></view>
   <view class="bg-cloud c3"></view>
 
-  <!-- 顶部光晕 -->
+  <!-- 顶部金色光晕 -->
   <view class="top-glow"></view>
+  <view class="top-glow2"></view>
 
   <!-- 标题区域 -->
   <view class="title-area">
-    <!-- 飞剑图标 -->
-    <view class="sword-icon">
-      <view class="sword-ring"></view>
-      <view class="sword-blade"></view>
-      <view class="sword-guard"></view>
-      <view class="sword-handle"></view>
-      <view class="sword-tassel"></view>
-      <view class="sword-glow"></view>
-      <view class="sword-glow2"></view>
+    <!-- 武侠人物剪影 -->
+    <view class="hero-silhouette">
+      <!-- 光环 -->
+      <view class="hero-ring"></view>
+      <view class="hero-ring hero-ring2"></view>
+      <!-- 身体 -->
+      <view class="hero-body"></view>
+      <!-- 头部 -->
+      <view class="hero-head"></view>
+      <!-- 发髻 -->
+      <view class="hero-topknot"></view>
+      <!-- 笠帽 -->
+      <view class="hero-hat">
+        <view class="hat-brim"></view>
+        <view class="hat-crown"></view>
+        <view class="hat-top"></view>
+      </view>
+      <!-- 右臂持剑（向前伸出） -->
+      <view class="hero-arm-right"></view>
+      <!-- 剑 -->
+      <view class="hero-sword">
+        <view class="sword-blade"></view>
+        <view class="sword-guard"></view>
+        <view class="sword-handle"></view>
+      </view>
+      <!-- 左臂披风 -->
+      <view class="hero-arm-left"></view>
+      <!-- 披风 -->
+      <view class="hero-cape"></view>
+      <!-- 衣摆 -->
+      <view class="hero-robe"></view>
+      <!-- 金色剑气光效 -->
+      <view class="sword-aura"></view>
     </view>
 
-    <text class="title-chinese">御剑飞行</text>
-    <text class="title-sub">— 修 仙 之 路 —</text>
+    <text class="title-chinese">御 剑 飞 行</text>
+    <text class="title-sub">— 仙 途 问 道 —</text>
 
     <view class="deco-line">
-      <view class="deco-dot"></view>
+      <view class="deco-diamond"></view>
     </view>
 
-    <text class="sub-text">乘天地之正 · 御六气之辩</text>
+    <text class="sub-text">御六气之辩 · 以游无穷者</text>
   </view>
 
   <!-- 最高分 -->
   <view class="high-score" wx:if="{{highScore > 0}}">
-    <text class="score-label">道  行</text>
+    <text class="score-label">修 为</text>
     <view class="score-value-wrap">
       <text class="score-value">{{highScore}}</text>
-      <text class="score-unit">年</text>
+      <text class="score-unit">载</text>
     </view>
+    <view class="score-deco"></view>
   </view>
 
   <!-- 开始按钮 -->
   <view class="btn-area">
     <view class="btn-start" bindtap="onStart">
       <view class="btn-bg"></view>
-      <text class="btn-text">开 始 修 炼</text>
+      <view class="btn-glow"></view>
+      <text class="btn-text">踏 上 仙 途</text>
     </view>
   </view>
 
   <!-- 底部 -->
   <view class="footer">
-    <text class="footer-text">点击御剑 · 躲避天劫 · 问道长生</text>
+    <text class="footer-text">点触御剑 · 穿行险峰 · 问道长生</text>
   </view>
 </view>

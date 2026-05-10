@@ -19,6 +19,7 @@ Page({
     this.frameCount = 0
     this.stars = []
     this.spiritParticles = []
+    this.inkSplashes = []
 
     this.player = {
       x: 0, y: 0, vy: 0,
@@ -29,9 +30,11 @@ Page({
     }
 
     this.obstacles = []
-    this.obstacleSpeed = 1.5
+    this.obstacleSpeed = 2.0
+    this.obstaclesPassed = 0
     this.clouds = []
     this.mountains = []
+    this.gameStarted = false
   },
 
   onReady() {
@@ -58,12 +61,13 @@ Page({
       ctx.scale(dpr, dpr)
 
       this.player.x = this.w * 0.25
-      this.player.y = this.h * 0.45
+      this.player.y = this.h * 0.5
       this.player.baseY = this.player.y
-      this.player.size = Math.min(this.w, this.h) * 0.032
-      // 微重力，跳跃响应适中
-      this.player.gravity = this.h * 0.00015
-      this.player.jumpForce = -this.h * 0.0062
+      this.player.size = Math.min(this.w, this.h) * 0.035
+
+      // 快速点击模式：重力适中，跳跃力适中，适合高频点击
+      this.player.gravity = this.h * 0.00026
+      this.player.jumpForce = -this.h * 0.005
 
       this.initBackground()
       this.gameLoop()
@@ -74,23 +78,36 @@ Page({
 
   initBackground() {
     this.stars = []
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 40; i++) {
       this.stars.push({
         x: Math.random() * this.w,
-        y: Math.random() * this.h * 0.5,
-        r: 0.3 + Math.random() * 1.2,
-        a: 0.3 + Math.random() * 0.7
+        y: Math.random() * this.h * 0.55,
+        r: 0.3 + Math.random() * 1.4,
+        a: 0.2 + Math.random() * 0.6,
+        twinkle: Math.random() * Math.PI * 2
       })
     }
 
     this.spiritParticles = []
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 15; i++) {
       this.spiritParticles.push({
         x: Math.random() * this.w,
         y: Math.random() * this.h,
-        r: 1 + Math.random() * 2.5,
-        speed: 0.2 + Math.random() * 0.4,
+        r: 0.8 + Math.random() * 2.2,
+        speed: 0.15 + Math.random() * 0.35,
         phase: Math.random() * Math.PI * 2
+      })
+    }
+
+    // 水墨飞溅效果
+    this.inkSplashes = []
+    for (let i = 0; i < 6; i++) {
+      this.inkSplashes.push({
+        x: Math.random() * this.w,
+        y: Math.random() * this.h,
+        r: 15 + Math.random() * 35,
+        a: 0.015 + Math.random() * 0.025,
+        speed: 0.1 + Math.random() * 0.2
       })
     }
 
@@ -98,20 +115,20 @@ Page({
     for (let i = 0; i < 5; i++) {
       this.clouds.push({
         x: Math.random() * this.w * 1.2 - this.w * 0.2,
-        y: 30 + Math.random() * this.h * 0.3,
-        w: 50 + Math.random() * 70,
-        speed: 0.15 + Math.random() * 0.2,
-        a: 0.04 + Math.random() * 0.04
+        y: 25 + Math.random() * this.h * 0.28,
+        w: 55 + Math.random() * 75,
+        speed: 0.12 + Math.random() * 0.18,
+        a: 0.03 + Math.random() * 0.04
       })
     }
 
     this.mountains = []
-    const mCount = Math.ceil(this.w / 100) + 2
+    const mCount = Math.ceil(this.w / 90) + 3
     for (let i = 0; i < mCount; i++) {
       this.mountains.push({
-        x: i * (90 + Math.random() * 50) - 40,
-        h: 50 + Math.random() * 80,
-        w: 90 + Math.random() * 50
+        x: i * (80 + Math.random() * 55) - 40,
+        h: 55 + Math.random() * 90,
+        w: 80 + Math.random() * 60
       })
     }
   },
@@ -132,29 +149,34 @@ Page({
     const p = this.player
     const h = this.h
 
-    // 缓和的物理效果
     p.vy += p.gravity
     p.y += p.vy
 
-    // 撞顶
     if (p.y < p.size) {
       p.y = p.size
       p.vy = 0
     }
 
-    // 落地即结束
     if (p.y > h - p.size) {
       this.endGame()
       return
     }
 
-    // 障碍物生成（降低频率）
     this.frameCount++
-    if (this.frameCount > 60 && this.frameCount % 95 === 0) {
+
+    // 首次障碍物更早出现（约1秒），之后间隔生成
+    const spawnInterval = 100
+    if (!this.gameStarted && this.frameCount > 55) {
+      this.gameStarted = true
+      this.spawnObstacle()
+    } else if (this.gameStarted && this.frameCount % spawnInterval === 0) {
       this.spawnObstacle()
     }
 
-    // 更新障碍物
+    // 渐进难度：每过20个障碍物加速
+    const newSpeed = 2.0 + Math.floor(this.obstaclesPassed / 20) * 0.25
+    this.obstacleSpeed = Math.min(newSpeed, 4.5)
+
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i]
       obs.x -= this.obstacleSpeed
@@ -162,36 +184,34 @@ Page({
       if (!obs.passed && obs.x + obs.w < p.x) {
         obs.passed = true
         this.score++
+        this.obstaclesPassed++
         this.setData({ score: this.score })
       }
 
-      if (obs.x + obs.w < -20) {
+      if (obs.x + obs.w < -30) {
         this.obstacles.splice(i, 1)
       }
     }
 
     this.checkCollision()
 
-    // 更新云朵
     for (const c of this.clouds) {
       c.x -= c.speed
       if (c.x + c.w < -60) {
         c.x = this.w + 40
-        c.y = 30 + Math.random() * this.h * 0.3
-        c.a = 0.04 + Math.random() * 0.04
+        c.y = 25 + Math.random() * this.h * 0.28
+        c.a = 0.03 + Math.random() * 0.04
       }
     }
 
-    // 更新山脉（慢速滚动）
     for (const m of this.mountains) {
-      m.x -= 0.3
+      m.x -= 0.25
       if (m.x + m.w < -50) {
         m.x = this.w + 30
-        m.h = 50 + Math.random() * 80
+        m.h = 55 + Math.random() * 90
       }
     }
 
-    // 灵气粒子浮动
     for (const sp of this.spiritParticles) {
       sp.y -= sp.speed
       if (sp.y + sp.r < 0) {
@@ -199,18 +219,27 @@ Page({
         sp.x = Math.random() * this.w
       }
     }
+
+    for (const is of this.inkSplashes) {
+      is.y -= is.speed
+      if (is.y + is.r < 0) {
+        is.y = this.h + 10
+        is.x = Math.random() * this.w
+        is.a = 0.015 + Math.random() * 0.025
+      }
+    }
   },
 
   spawnObstacle() {
-    // 间隙宽度根据玩家跳跃能力动态设计
-    const gap = 100 + Math.random() * 25
-    // 通道位置分布更均匀，避免过于靠边
-    const margin = this.h * 0.12
+    // 更宽的通道
+    const gap = 120 + Math.random() * 35
+    const margin = this.h * 0.1
     const topMin = margin
     const topMax = this.h - gap - margin
     const topH = topMin + Math.random() * (topMax - topMin)
 
-    const obsW = 22 + Math.random() * 6
+    // 障碍物更粗大
+    const obsW = 28 + Math.random() * 8
 
     this.obstacles.push({
       x: this.w,
@@ -218,18 +247,47 @@ Page({
       bottomY: topH + gap,
       w: obsW,
       passed: false,
-      // 用于符文动画
-      phase: Math.random() * Math.PI * 2
+      phase: Math.random() * Math.PI * 2,
+      cracks: this.generateCracks(obsW, topH, this.h - (topH + gap))
     })
+  },
+
+  generateCracks(w, topH, bottomH) {
+    const cracks = []
+    // 上柱裂纹
+    if (topH > 30) {
+      for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
+        cracks.push({
+          side: 'top',
+          y: 10 + Math.random() * (topH - 20),
+          x: Math.random() * w,
+          len: 4 + Math.random() * 8,
+          angle: (Math.random() - 0.5) * 1.2
+        })
+      }
+    }
+    // 下柱裂纹
+    if (bottomH > 30) {
+      for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) {
+        cracks.push({
+          side: 'bottom',
+          y: 10 + Math.random() * (bottomH - 20),
+          x: Math.random() * w,
+          len: 4 + Math.random() * 8,
+          angle: (Math.random() - 0.5) * 1.2
+        })
+      }
+    }
+    return cracks
   },
 
   checkCollision() {
     const p = this.player
-    const hitR = p.size * 0.5
+    const hitR = p.size * 0.45
 
     for (const obs of this.obstacles) {
       if (p.x + hitR > obs.x && p.x - hitR < obs.x + obs.w) {
-        if (p.y - hitR < obs.topH + 5 || p.y + hitR > obs.bottomY - 5) {
+        if (p.y - hitR < obs.topH || p.y + hitR > obs.bottomY) {
           this.endGame()
           return
         }
@@ -257,184 +315,324 @@ Page({
     const w = this.w
     const h = this.h
 
-    // === 天空背景（修仙风格渐变） ===
+    // === 水墨天空背景 ===
     const grad = ctx.createLinearGradient(0, 0, 0, h)
-    grad.addColorStop(0, '#0a0a1a')
-    grad.addColorStop(0.25, '#14142e')
-    grad.addColorStop(0.5, '#1a1a3e')
-    grad.addColorStop(0.75, '#1e1830')
-    grad.addColorStop(1, '#0f0c1a')
+    grad.addColorStop(0, '#1a1008')
+    grad.addColorStop(0.2, '#2a1a0a')
+    grad.addColorStop(0.5, '#3d2815')
+    grad.addColorStop(0.75, '#2a1a0c')
+    grad.addColorStop(1, '#1a0e06')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
 
-    // === 星辰 ===
+    // === 宣纸纹理（底层暖黄光晕） ===
+    ctx.fillStyle = 'rgba(180, 140, 100, 0.015)'
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath()
+      ctx.arc(
+        w * (0.1 + Math.random() * 0.8),
+        h * (0.05 + Math.random() * 0.9),
+        60 + Math.random() * 120,
+        0, Math.PI * 2
+      )
+      ctx.fill()
+    }
+
+    // === 星辰（暖金色） ===
     for (const s of this.stars) {
-      ctx.fillStyle = `rgba(255,255,255,${s.a * 0.5})`
+      const twinkle = 0.3 + 0.4 * Math.sin(this.frameCount * 0.015 + s.twinkle)
+      ctx.fillStyle = `rgba(220, 180, 120, ${s.a * twinkle})`
       ctx.beginPath()
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
       ctx.fill()
     }
 
-    // === 灵气粒子（上浮光点） ===
+    // === 灵气粒子（金尘） ===
     for (const sp of this.spiritParticles) {
-      const alpha = 0.2 + 0.3 * Math.sin(sp.phase + this.frameCount * 0.02)
-      ctx.fillStyle = `rgba(180, 220, 255, ${alpha})`
-      ctx.shadowColor = 'rgba(180, 220, 255, 0.3)'
-      ctx.shadowBlur = 8
+      const alpha = 0.15 + 0.25 * Math.sin(sp.phase + this.frameCount * 0.018)
+      ctx.fillStyle = `rgba(220, 180, 100, ${alpha})`
+      ctx.shadowColor = 'rgba(200, 150, 80, 0.25)'
+      ctx.shadowBlur = 6
       ctx.beginPath()
       ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.shadowBlur = 0
 
-    // === 远山（多层） ===
-    ctx.shadowBlur = 0
-    for (let layer = 0; layer < 2; layer++) {
-      const offset = layer * 30
-      const alpha = layer === 0 ? 0.15 : 0.25
-      ctx.fillStyle = `rgba(30, 35, 60, ${alpha})`
+    // === 远山（水墨层次） ===
+    for (let layer = 0; layer < 3; layer++) {
+      const offset = layer * 25
+      const alpha = 0.06 + layer * 0.04
+      ctx.fillStyle = `rgba(40, 25, 15, ${alpha})`
+      ctx.shadowColor = 'rgba(30, 18, 10, 0.1)'
+      ctx.shadowBlur = 15
       for (const m of this.mountains) {
+        const mx = m.x - offset * 0.5
+        const mh = m.h - layer * 12
         ctx.beginPath()
-        ctx.moveTo(m.x - offset, h)
-        ctx.lineTo(m.x + m.w * 0.5 - offset, h - m.h)
-        ctx.lineTo(m.x + m.w - offset, h)
+        ctx.moveTo(mx, h)
+        // 山水画风格不规则山形
+        ctx.lineTo(mx + m.w * 0.25, h - mh * 0.7)
+        ctx.lineTo(mx + m.w * 0.4, h - mh * 1.05)
+        ctx.lineTo(mx + m.w * 0.55, h - mh * 0.6)
+        ctx.lineTo(mx + m.w * 0.7, h - mh * 0.9)
+        ctx.lineTo(mx + m.w * 0.85, h - mh * 0.55)
+        ctx.lineTo(mx + m.w, h - mh * 0.3)
+        ctx.lineTo(mx + m.w, h)
         ctx.closePath()
         ctx.fill()
       }
+      ctx.shadowBlur = 0
     }
 
-    // === 云雾 ===
+    // === 水墨飞溅 ===
+    for (const is of this.inkSplashes) {
+      ctx.fillStyle = `rgba(60, 35, 20, ${is.a})`
+      ctx.beginPath()
+      ctx.arc(is.x, is.y, is.r, 0, Math.PI * 2)
+      ctx.fill()
+      // 不规则边缘
+      ctx.beginPath()
+      ctx.arc(is.x + is.r * 0.5, is.y - is.r * 0.3, is.r * 0.4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.beginPath()
+      ctx.arc(is.x - is.r * 0.4, is.y + is.r * 0.4, is.r * 0.35, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    // === 云雾（淡墨） ===
     for (const c of this.clouds) {
-      ctx.fillStyle = `rgba(200, 215, 240, ${c.a})`
+      ctx.fillStyle = `rgba(180, 150, 130, ${c.a})`
       this.drawCloud(ctx, c.x, c.y, c.w)
     }
 
-    // === 障碍物（修仙石门） ===
+    // === 障碍物（岩柱） ===
     for (const obs of this.obstacles) {
-      this.drawObstacle(ctx, obs, h)
+      this.drawRockPillar(ctx, obs, h)
     }
 
-    // === 玩家（御剑飞仙） ===
+    // === 玩家 ===
     this.drawPlayer(ctx)
 
-    // === 地面微光 ===
-    ctx.fillStyle = 'rgba(100, 130, 200, 0.03)'
-    ctx.fillRect(0, h - 2, w, 2)
+    // === 地面线 ===
+    const groundGrad = ctx.createLinearGradient(0, h - 3, 0, h)
+    groundGrad.addColorStop(0, 'rgba(120, 80, 40, 0)')
+    groundGrad.addColorStop(0.5, 'rgba(120, 80, 40, 0.06)')
+    groundGrad.addColorStop(1, 'rgba(120, 80, 40, 0)')
+    ctx.fillStyle = groundGrad
+    ctx.fillRect(0, h - 3, w, 3)
   },
 
-  // 祥云（传统如意云纹简化版）
   drawCloud(ctx, x, y, w) {
     const r = w * 0.2
-    // 主云头
+    // 水墨云纹
     ctx.beginPath()
     ctx.arc(x, y, r, 0, Math.PI * 2)
     ctx.fill()
-    // 左云头
     ctx.beginPath()
     ctx.arc(x - r * 0.8, y + r * 0.1, r * 0.7, 0, Math.PI * 2)
     ctx.fill()
-    // 右云头
     ctx.beginPath()
     ctx.arc(x + r * 0.7, y + r * 0.05, r * 0.65, 0, Math.PI * 2)
     ctx.fill()
-    // 上云头
     ctx.beginPath()
     ctx.arc(x - r * 0.2, y - r * 0.35, r * 0.55, 0, Math.PI * 2)
     ctx.fill()
-    // 云尾
     ctx.beginPath()
     ctx.arc(x + r * 1.3, y + r * 0.25, r * 0.35, 0, Math.PI * 2)
     ctx.fill()
   },
 
-  drawObstacle(ctx, obs, h) {
-    const { x, topH, bottomY, w, phase } = obs
+  // === 岩柱障碍物（武侠风格石刻柱） ===
+  drawRockPillar(ctx, obs, h) {
+    const { x, topH, bottomY, w, phase, cracks } = obs
 
-    // 石柱主色渐变
-    const pillarGrad = ctx.createLinearGradient(x, 0, x + w, 0)
-    pillarGrad.addColorStop(0, '#2a3a45')
-    pillarGrad.addColorStop(0.15, '#3d5060')
-    pillarGrad.addColorStop(0.5, '#4a6075')
-    pillarGrad.addColorStop(0.85, '#3d5060')
-    pillarGrad.addColorStop(1, '#2a3a45')
-    ctx.fillStyle = pillarGrad
+    // 岩石主色调（暖灰褐）
+    const rockGrad = ctx.createLinearGradient(x, 0, x + w, 0)
+    rockGrad.addColorStop(0, '#3a2a18')
+    rockGrad.addColorStop(0.15, '#5a4530')
+    rockGrad.addColorStop(0.35, '#6b5540')
+    rockGrad.addColorStop(0.6, '#5a4530')
+    rockGrad.addColorStop(0.85, '#4a3525')
+    rockGrad.addColorStop(1, '#3a2a18')
 
-    // === 上柱（悬空仙门） ===
-    ctx.fillRect(x, 0, w, topH)
+    // === 上岩柱 ===
+    ctx.fillStyle = rockGrad
+    this.drawRuggedPillar(ctx, x, 0, w, topH)
 
-    // 柱顶装饰（古瓦檐）
-    ctx.fillStyle = '#3a4a55'
-    ctx.fillRect(x - 4, topH - 20, w + 8, 20)
-    ctx.fillStyle = '#4a6a7a'
-    ctx.fillRect(x - 2, topH - 20, w + 4, 4)
-    ctx.fillStyle = '#2a3a45'
-    ctx.fillRect(x - 2, topH - 4, w + 4, 4)
+    // 上柱顶端（断裂岩面）
+    ctx.fillStyle = '#4a3828'
+    ctx.beginPath()
+    ctx.moveTo(x - 3, topH - 6)
+    ctx.lineTo(x + w * 0.2, topH - 18)
+    ctx.lineTo(x + w * 0.5, topH - 4)
+    ctx.lineTo(x + w * 0.8, topH - 14)
+    ctx.lineTo(x + w + 3, topH - 8)
+    ctx.lineTo(x + w + 3, topH + 6)
+    ctx.lineTo(x - 3, topH + 6)
+    ctx.closePath()
+    ctx.fill()
 
-    // 柱身石刻纹理
-    ctx.fillStyle = 'rgba(200, 220, 240, 0.06)'
-    for (let i = 0; i < 4; i++) {
-      const yy = 10 + i * 22
-      if (yy < topH - 25) {
-        ctx.fillRect(x + 3, yy, w - 6, 1)
+    // 上柱底部（断裂岩面 - 通道上方）
+    ctx.fillStyle = '#3d2d1d'
+    ctx.beginPath()
+    ctx.moveTo(x - 3, topH - 4)
+    ctx.lineTo(x + w * 0.3, topH + 10)
+    ctx.lineTo(x + w * 0.5, topH + 3)
+    ctx.lineTo(x + w * 0.7, topH + 8)
+    ctx.lineTo(x + w + 3, topH + 4)
+    ctx.lineTo(x + w + 3, topH - 8)
+    ctx.lineTo(x - 3, topH - 8)
+    ctx.closePath()
+    ctx.fill()
+
+    // === 下岩柱 ===
+    ctx.fillStyle = rockGrad
+    this.drawRuggedPillar(ctx, x, bottomY, w, h - bottomY)
+
+    // 下柱顶端（断裂岩面）
+    ctx.fillStyle = '#4a3828'
+    ctx.beginPath()
+    ctx.moveTo(x - 3, bottomY + 4)
+    ctx.lineTo(x + w * 0.25, bottomY - 10)
+    ctx.lineTo(x + w * 0.55, bottomY + 2)
+    ctx.lineTo(x + w * 0.75, bottomY - 8)
+    ctx.lineTo(x + w + 3, bottomY + 4)
+    ctx.lineTo(x + w + 3, bottomY + 8)
+    ctx.lineTo(x - 3, bottomY + 8)
+    ctx.closePath()
+    ctx.fill()
+
+    // === 岩石裂纹 ===
+    ctx.strokeStyle = 'rgba(30, 18, 10, 0.3)'
+    ctx.lineWidth = 0.8
+    for (const crack of (cracks || [])) {
+      const baseY = crack.side === 'top' ? 0 : bottomY
+      ctx.beginPath()
+      ctx.moveTo(x + crack.x, baseY + crack.y)
+      ctx.lineTo(
+        x + crack.x + Math.cos(crack.angle) * crack.len,
+        baseY + crack.y + Math.sin(crack.angle) * crack.len
+      )
+      ctx.stroke()
+    }
+
+    // === 岩石纹理横纹 ===
+    ctx.strokeStyle = 'rgba(80, 55, 35, 0.2)'
+    ctx.lineWidth = 0.6
+    // 上柱横纹
+    for (let i = 0; i < Math.floor(topH / 18); i++) {
+      const ty = 6 + i * 18 + Math.sin(i * 1.7) * 5
+      if (ty < topH - 12) {
+        ctx.beginPath()
+        ctx.moveTo(x + 3, ty)
+        ctx.quadraticCurveTo(x + w * 0.5, ty + Math.sin(i * 0.8) * 2, x + w - 3, ty)
+        ctx.stroke()
+      }
+    }
+    // 下柱横纹
+    const bottomH = h - bottomY
+    for (let i = 0; i < Math.floor(bottomH / 18); i++) {
+      const ty = bottomY + 6 + i * 18 + Math.sin(i * 1.7) * 5
+      if (ty < h - 10) {
+        ctx.beginPath()
+        ctx.moveTo(x + 3, ty)
+        ctx.quadraticCurveTo(x + w * 0.5, ty + Math.sin(i * 0.8) * 2, x + w - 3, ty)
+        ctx.stroke()
       }
     }
 
-    // === 下柱 ===
-    ctx.fillStyle = pillarGrad
-    ctx.fillRect(x, bottomY, w, h - bottomY)
-
-    // 柱顶装饰
-    ctx.fillStyle = '#3a4a55'
-    ctx.fillRect(x - 4, bottomY, w + 8, 20)
-    ctx.fillStyle = '#4a6a7a'
-    ctx.fillRect(x - 2, bottomY + 16, w + 4, 4)
-    ctx.fillStyle = '#2a3a45'
-    ctx.fillRect(x - 2, bottomY, w + 4, 4)
-
-    // 符文（动态发光）
+    // === 金纹石刻（金色符文） ===
     if (!this.isGameOver) {
-      const glow = 0.15 + 0.1 * Math.sin(this.frameCount * 0.03 + (phase || 0))
-      ctx.fillStyle = `rgba(180, 220, 255, ${glow})`
+      const glow = 0.12 + 0.08 * Math.sin(this.frameCount * 0.03 + (phase || 0))
+      ctx.fillStyle = `rgba(200, 150, 80, ${glow})`
 
       // 上柱符文
-      ctx.fillRect(x + w * 0.3, topH - 45, 2.5, 14)
-      ctx.fillRect(x + w * 0.55, topH - 35, 2.5, 14)
+      if (topH > 60) {
+        const runeY = topH - 42
+        ctx.fillRect(x + w * 0.3, runeY, 3, 16)
+        ctx.fillRect(x + w * 0.55, runeY + 4, 3, 16)
+        // 横向符文
+        ctx.fillRect(x + w * 0.25, runeY + 7, 4, 2)
+        ctx.fillRect(x + w * 0.5, runeY + 9, 4, 2)
+      }
 
       // 下柱符文
-      ctx.fillRect(x + w * 0.3, bottomY + 25, 2.5, 14)
-      ctx.fillRect(x + w * 0.55, bottomY + 35, 2.5, 14)
+      if (h - bottomY > 60) {
+        const runeY = bottomY + 26
+        ctx.fillRect(x + w * 0.3, runeY, 3, 16)
+        ctx.fillRect(x + w * 0.55, runeY - 4, 3, 16)
+        ctx.fillRect(x + w * 0.25, runeY + 4, 4, 2)
+        ctx.fillRect(x + w * 0.5, runeY + 6, 4, 2)
+      }
 
       // 符文光点
-      ctx.shadowColor = 'rgba(180, 220, 255, 0.4)'
-      ctx.shadowBlur = 12
-      ctx.beginPath()
-      ctx.arc(x + w * 0.5, topH - 38, 2, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.beginPath()
-      ctx.arc(x + w * 0.5, bottomY + 38, 2, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.shadowColor = 'rgba(220, 160, 60, 0.35)'
+      ctx.shadowBlur = 10
+      if (topH > 60) {
+        ctx.beginPath()
+        ctx.arc(x + w * 0.5, topH - 35, 2, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      if (h - bottomY > 60) {
+        ctx.beginPath()
+        ctx.arc(x + w * 0.5, bottomY + 32, 2, 0, Math.PI * 2)
+        ctx.fill()
+      }
       ctx.shadowBlur = 0
     }
 
-    // 门框侧边装饰线
-    ctx.strokeStyle = 'rgba(200, 220, 240, 0.08)'
-    ctx.lineWidth = 1
+    // === 岩柱边缘（不规则凿痕） ===
+    ctx.strokeStyle = 'rgba(30, 18, 10, 0.2)'
+    ctx.lineWidth = 1.2
+    // 左侧
     ctx.beginPath()
-    ctx.moveTo(x + 4, 0)
-    ctx.lineTo(x + 4, topH)
+    ctx.moveTo(x, 0)
+    ctx.quadraticCurveTo(x + 2, topH * 0.3, x - 1, topH * 0.6)
+    ctx.quadraticCurveTo(x + 2, topH, x, topH)
     ctx.stroke()
     ctx.beginPath()
-    ctx.moveTo(x + w - 4, 0)
-    ctx.lineTo(x + w - 4, topH)
+    ctx.moveTo(x, bottomY)
+    ctx.quadraticCurveTo(x + 2, bottomY + (h - bottomY) * 0.4, x - 1, bottomY + (h - bottomY) * 0.7)
+    ctx.quadraticCurveTo(x + 2, h, x, h)
+    ctx.stroke()
+    // 右侧
+    ctx.beginPath()
+    ctx.moveTo(x + w, 0)
+    ctx.quadraticCurveTo(x + w - 2, topH * 0.3, x + w + 1, topH * 0.6)
+    ctx.quadraticCurveTo(x + w - 2, topH, x + w, topH)
     ctx.stroke()
     ctx.beginPath()
-    ctx.moveTo(x + 4, bottomY)
-    ctx.lineTo(x + 4, h)
+    ctx.moveTo(x + w, bottomY)
+    ctx.quadraticCurveTo(x + w - 2, bottomY + (h - bottomY) * 0.4, x + w + 1, bottomY + (h - bottomY) * 0.7)
+    ctx.quadraticCurveTo(x + w - 2, h, x + w, h)
     ctx.stroke()
+  },
+
+  // 粗糙岩柱侧面
+  drawRuggedPillar(ctx, x, y, w, h) {
+    if (h <= 0) return
     ctx.beginPath()
-    ctx.moveTo(x + w - 4, bottomY)
-    ctx.lineTo(x + w - 4, h)
-    ctx.stroke()
+    // 左侧不规则
+    ctx.moveTo(x, y)
+    ctx.lineTo(x + 2, y + h * 0.1)
+    ctx.lineTo(x - 1, y + h * 0.25)
+    ctx.lineTo(x + 3, y + h * 0.4)
+    ctx.lineTo(x, y + h * 0.55)
+    ctx.lineTo(x + 2, y + h * 0.7)
+    ctx.lineTo(x - 1, y + h * 0.85)
+    ctx.lineTo(x + 1, y + h)
+    // 右侧不规则
+    ctx.lineTo(x + w - 1, y + h)
+    ctx.lineTo(x + w + 1, y + h * 0.85)
+    ctx.lineTo(x + w - 2, y + h * 0.7)
+    ctx.lineTo(x + w, y + h * 0.55)
+    ctx.lineTo(x + w + 2, y + h * 0.4)
+    ctx.lineTo(x + w - 1, y + h * 0.25)
+    ctx.lineTo(x + w + 1, y + h * 0.1)
+    ctx.lineTo(x + w, y)
+    ctx.closePath()
+    ctx.fill()
   },
 
   drawPlayer(ctx) {
@@ -443,39 +641,39 @@ Page({
     ctx.translate(p.x, p.y)
 
     const s = p.size
-    const tilt = Math.min(Math.max(p.vy * 0.015, -0.25), 0.25)
+    const tilt = Math.min(Math.max(p.vy * 0.018, -0.3), 0.3)
     ctx.rotate(tilt)
 
-    // === 御剑灵光 ===
-    ctx.shadowColor = 'rgba(150, 180, 255, 0.25)'
-    ctx.shadowBlur = s * 0.6
+    // === 金色剑气光环 ===
+    ctx.shadowColor = 'rgba(220, 170, 80, 0.2)'
+    ctx.shadowBlur = s * 0.7
 
     // === 飞剑 ===
-    // 剑身
     const bladeGrad = ctx.createLinearGradient(-s * 1.5, 0, s * 1.4, 0)
-    bladeGrad.addColorStop(0, '#6a7a90')
-    bladeGrad.addColorStop(0.2, '#a0b4d0')
-    bladeGrad.addColorStop(0.5, '#c0d4ec')
-    bladeGrad.addColorStop(0.8, '#a0b4d0')
-    bladeGrad.addColorStop(1, '#6a7a90')
+    bladeGrad.addColorStop(0, '#6a5540')
+    bladeGrad.addColorStop(0.2, '#a09070')
+    bladeGrad.addColorStop(0.5, '#c8b898')
+    bladeGrad.addColorStop(0.8, '#a09070')
+    bladeGrad.addColorStop(1, '#6a5540')
     ctx.strokeStyle = bladeGrad
-    ctx.lineWidth = 2.8
+    ctx.lineWidth = 3
     ctx.beginPath()
     ctx.moveTo(-s * 1.5, 0)
     ctx.lineTo(s * 1.4, 0)
     ctx.stroke()
-    // 剑刃高光
-    ctx.strokeStyle = 'rgba(220, 240, 255, 0.15)'
+
+    // 剑刃暖光高光
+    ctx.strokeStyle = 'rgba(240, 220, 180, 0.15)'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(-s * 1.3, -1)
     ctx.lineTo(s * 1.1, -1)
     ctx.stroke()
 
-    // 剑灵气
-    ctx.shadowBlur = s * 0.8
-    ctx.strokeStyle = 'rgba(180, 210, 255, 0.06)'
-    ctx.lineWidth = 10
+    // 剑气（金色光晕）
+    ctx.shadowBlur = s * 0.9
+    ctx.strokeStyle = 'rgba(200, 160, 80, 0.06)'
+    ctx.lineWidth = 11
     ctx.beginPath()
     ctx.moveTo(-s * 1.5, 0)
     ctx.lineTo(s * 1.4, 0)
@@ -483,161 +681,182 @@ Page({
     ctx.shadowBlur = 0
 
     // 剑格
-    ctx.fillStyle = '#5a4030'
-    ctx.fillRect(-s * 1.65, -s * 0.14, s * 0.2, s * 0.28)
-    ctx.fillStyle = '#8a7050'
-    ctx.fillRect(-s * 1.6, -s * 0.08, s * 0.1, s * 0.16)
+    ctx.fillStyle = '#3d2a15'
+    ctx.fillRect(-s * 1.65, -s * 0.15, s * 0.22, s * 0.3)
+    ctx.fillStyle = '#8a6040'
+    ctx.fillRect(-s * 1.6, -s * 0.09, s * 0.12, s * 0.18)
+
     // 剑穗（飘动）
     const tasselPhase = this.frameCount * 0.08
     ctx.strokeStyle = '#c04040'
     ctx.lineWidth = 1.5
     ctx.beginPath()
-    ctx.moveTo(-s * 1.6, s * 0.14)
+    ctx.moveTo(-s * 1.6, s * 0.15)
     ctx.quadraticCurveTo(
       -s * 1.8 + Math.sin(tasselPhase) * s * 0.1,
-      s * 0.4 + Math.sin(tasselPhase + 0.5) * s * 0.1,
+      s * 0.42 + Math.sin(tasselPhase + 0.5) * s * 0.1,
       -s * 1.5 + Math.sin(tasselPhase * 1.2) * s * 0.15,
-      s * 0.65
+      s * 0.7
     )
     ctx.stroke()
 
-    // === 道袍衣摆（飘动） ===
+    // === 道袍 ===
     const robeWave = Math.sin(this.frameCount * 0.05) * s * 0.06
-    ctx.fillStyle = '#3d5070'
+    // 外袍
+    ctx.fillStyle = '#4a4035'
     ctx.beginPath()
-    ctx.moveTo(-s * 0.4, -s * 0.4)
-    ctx.lineTo(-s * 0.55, s * 0.15 + robeWave * 0.5)
-    ctx.lineTo(-s * 0.35, s * 0.25 + robeWave)
-    ctx.lineTo(-s * 0.1, s * 0.15 + robeWave * 0.7)
-    ctx.lineTo(s * 0.1, s * 0.15 + robeWave * 0.7)
-    ctx.lineTo(s * 0.35, s * 0.25 + robeWave)
-    ctx.lineTo(s * 0.55, s * 0.15 + robeWave * 0.5)
-    ctx.lineTo(s * 0.4, -s * 0.4)
+    ctx.moveTo(-s * 0.45, -s * 0.35)
+    ctx.lineTo(-s * 0.6, s * 0.18 + robeWave * 0.5)
+    ctx.lineTo(-s * 0.4, s * 0.28 + robeWave)
+    ctx.lineTo(-s * 0.1, s * 0.18 + robeWave * 0.7)
+    ctx.lineTo(s * 0.1, s * 0.18 + robeWave * 0.7)
+    ctx.lineTo(s * 0.4, s * 0.28 + robeWave)
+    ctx.lineTo(s * 0.6, s * 0.18 + robeWave * 0.5)
+    ctx.lineTo(s * 0.45, -s * 0.35)
     ctx.closePath()
     ctx.fill()
 
-    // 衣襟交领
-    ctx.strokeStyle = 'rgba(200, 220, 240, 0.12)'
-    ctx.lineWidth = 0.6
+    // 内襟（米色交领）
+    ctx.fillStyle = '#d8c8a8'
     ctx.beginPath()
-    ctx.moveTo(-s * 0.12, -s * 0.4)
-    ctx.lineTo(-s * 0.08, s * 0.15)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(s * 0.12, -s * 0.4)
-    ctx.lineTo(s * 0.08, s * 0.15)
-    ctx.stroke()
+    ctx.moveTo(-s * 0.18, -s * 0.35)
+    ctx.lineTo(-s * 0.06, s * 0.12)
+    ctx.lineTo(s * 0.06, s * 0.1)
+    ctx.lineTo(s * 0.18, -s * 0.35)
+    ctx.closePath()
+    ctx.fill()
+
     // 腰带
-    ctx.fillStyle = '#5a4a3a'
-    ctx.fillRect(-s * 0.4, -s * 0.22, s * 0.8, s * 0.07)
-    ctx.fillStyle = '#6a5a4a'
-    ctx.fillRect(-s * 0.35, -s * 0.21, s * 0.7, s * 0.05)
+    ctx.fillStyle = '#3d2a15'
+    ctx.fillRect(-s * 0.45, -s * 0.2, s * 0.9, s * 0.08)
+    ctx.fillStyle = '#6a5030'
+    ctx.fillRect(-s * 0.38, -s * 0.19, s * 0.76, s * 0.05)
+    // 腰佩玉环
+    ctx.beginPath()
+    ctx.arc(s * 0.35, -s * 0.16, s * 0.06, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(120, 200, 150, 0.25)'
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(80, 150, 100, 0.3)'
+    ctx.lineWidth = 0.6
+    ctx.stroke()
 
     // === 身体 ===
     ctx.fillStyle = '#e8d5b7'
-    ctx.fillRect(-s * 0.3, -s * 1.2, s * 0.6, s * 0.85)
+    ctx.fillRect(-s * 0.3, -s * 1.25, s * 0.6, s * 0.9)
 
     // === 头部 ===
+    ctx.fillStyle = '#e8d5b7'
     ctx.beginPath()
-    ctx.arc(0, -s * 1.45, s * 0.32, 0, Math.PI * 2)
+    ctx.arc(0, -s * 1.5, s * 0.34, 0, Math.PI * 2)
     ctx.fill()
+
     // 发髻
     ctx.fillStyle = '#1a1010'
     ctx.beginPath()
-    ctx.arc(0, -s * 1.55, s * 0.32, Math.PI, 0)
+    ctx.arc(0, -s * 1.6, s * 0.34, Math.PI, 0)
     ctx.fill()
     ctx.beginPath()
-    ctx.arc(0, -s * 1.68, s * 0.11, 0, Math.PI * 2)
+    ctx.arc(0, -s * 1.75, s * 0.12, 0, Math.PI * 2)
     ctx.fill()
+    // 发簪
+    ctx.strokeStyle = '#c8a060'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(-s * 0.15, -s * 1.7)
+    ctx.lineTo(s * 0.15, -s * 1.78)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(s * 0.16, -s * 1.78, s * 0.03, 0, Math.PI * 2)
+    ctx.fillStyle = '#c8a060'
+    ctx.fill()
+
     // 鬓发飘动
     const hairWave = this.frameCount * 0.04
+    ctx.fillStyle = '#1a1010'
     ctx.beginPath()
-    ctx.moveTo(-s * 0.28, -s * 1.5)
+    ctx.moveTo(-s * 0.3, -s * 1.55)
     ctx.quadraticCurveTo(
-      -s * 0.55 + Math.sin(hairWave) * s * 0.08,
-      -s * 1.2 + Math.sin(hairWave + 0.3) * s * 0.05,
-      -s * 0.3 + Math.sin(hairWave * 1.1) * s * 0.1,
-      -s * 0.9
+      -s * 0.6 + Math.sin(hairWave) * s * 0.08,
+      -s * 1.25 + Math.sin(hairWave + 0.3) * s * 0.05,
+      -s * 0.35 + Math.sin(hairWave * 1.1) * s * 0.1,
+      -s * 0.95
     )
-    ctx.lineTo(-s * 0.18, -s * 0.95)
-    ctx.quadraticCurveTo(-s * 0.35, -s * 1.2, -s * 0.15, -s * 1.45)
+    ctx.lineTo(-s * 0.18, -s * 1.0)
+    ctx.quadraticCurveTo(-s * 0.38, -s * 1.25, -s * 0.16, -s * 1.5)
     ctx.closePath()
     ctx.fill()
     ctx.beginPath()
-    ctx.moveTo(s * 0.28, -s * 1.5)
+    ctx.moveTo(s * 0.3, -s * 1.55)
     ctx.quadraticCurveTo(
-      s * 0.55 + Math.sin(hairWave + 1) * s * 0.08,
-      -s * 1.2 + Math.sin(hairWave + 1.3) * s * 0.05,
-      s * 0.3 + Math.sin(hairWave + 1.1) * s * 0.1,
-      -s * 0.9
+      s * 0.6 + Math.sin(hairWave + 1) * s * 0.08,
+      -s * 1.25 + Math.sin(hairWave + 1.3) * s * 0.05,
+      s * 0.35 + Math.sin(hairWave + 1.1) * s * 0.1,
+      -s * 0.95
     )
-    ctx.lineTo(s * 0.18, -s * 0.95)
-    ctx.quadraticCurveTo(s * 0.35, -s * 1.2, s * 0.15, -s * 1.45)
+    ctx.lineTo(s * 0.18, -s * 1.0)
+    ctx.quadraticCurveTo(s * 0.38, -s * 1.25, s * 0.16, -s * 1.5)
     ctx.closePath()
     ctx.fill()
 
     // === 右臂前伸（御剑诀） ===
     ctx.strokeStyle = '#e8d5b7'
-    ctx.lineWidth = s * 0.13
+    ctx.lineWidth = s * 0.14
     ctx.lineCap = 'round'
     ctx.beginPath()
-    ctx.moveTo(s * 0.2, -s * 0.85)
-    ctx.quadraticCurveTo(s * 0.5, -s * 1.05, s * 0.72, -s * 0.92)
+    ctx.moveTo(s * 0.22, -s * 0.88)
+    ctx.quadraticCurveTo(s * 0.52, -s * 1.1, s * 0.78, -s * 0.95)
     ctx.stroke()
     // 袖子
-    ctx.strokeStyle = '#3d5070'
-    ctx.lineWidth = s * 0.22
+    ctx.strokeStyle = '#4a4035'
+    ctx.lineWidth = s * 0.24
     ctx.beginPath()
-    ctx.moveTo(s * 0.15, -s * 0.78)
-    ctx.quadraticCurveTo(s * 0.52, -s * 1.1, s * 0.78, -s * 0.85)
+    ctx.moveTo(s * 0.16, -s * 0.8)
+    ctx.quadraticCurveTo(s * 0.55, -s * 1.15, s * 0.85, -s * 0.88)
     ctx.stroke()
     // 袖口飘带
     const ribbonWave = this.frameCount * 0.06
-    ctx.strokeStyle = 'rgba(180, 200, 240, 0.2)'
-    ctx.lineWidth = s * 0.08
+    ctx.strokeStyle = 'rgba(200, 170, 120, 0.2)'
+    ctx.lineWidth = s * 0.09
     ctx.beginPath()
-    ctx.moveTo(s * 0.7, -s * 0.9)
+    ctx.moveTo(s * 0.78, -s * 0.93)
     ctx.quadraticCurveTo(
-      s * 1.0 + Math.sin(ribbonWave) * s * 0.1,
-      -s * 0.75 + Math.sin(ribbonWave + 0.5) * s * 0.1,
-      s * 1.1 + Math.sin(ribbonWave * 1.3) * s * 0.15,
-      -s * 0.55
+      s * 1.08 + Math.sin(ribbonWave) * s * 0.1,
+      -s * 0.78 + Math.sin(ribbonWave + 0.5) * s * 0.1,
+      s * 1.18 + Math.sin(ribbonWave * 1.3) * s * 0.15,
+      -s * 0.58
     )
     ctx.stroke()
     ctx.lineCap = 'butt'
 
     // === 左臂负手 ===
-    ctx.strokeStyle = '#3d5070'
-    ctx.lineWidth = s * 0.17
+    ctx.strokeStyle = '#4a4035'
+    ctx.lineWidth = s * 0.18
     ctx.beginPath()
-    ctx.moveTo(-s * 0.25, -s * 0.78)
-    ctx.quadraticCurveTo(-s * 0.5, -s * 0.58, -s * 0.42, -s * 0.25)
+    ctx.moveTo(-s * 0.28, -s * 0.8)
+    ctx.quadraticCurveTo(-s * 0.55, -s * 0.6, -s * 0.45, -s * 0.25)
     ctx.stroke()
 
-    // === 飞剑拖尾剑气 ===
+    // === 剑光拖尾（金色剑气粒子） ===
     if (!this.isGameOver) {
       ctx.shadowBlur = 0
-      // 剑光拖尾
-      const trail = 0.08 + 0.06 * Math.sin(this.frameCount * 0.08)
-      ctx.fillStyle = `rgba(160, 210, 255, ${trail})`
+      const trail = 0.06 + 0.05 * Math.sin(this.frameCount * 0.08)
+      ctx.fillStyle = `rgba(220, 180, 100, ${trail})`
 
-      // 主拖尾光点
       for (let i = 0; i < 3; i++) {
-        const tx = -s * (1.8 + i * 0.4)
+        const tx = -s * (1.8 + i * 0.45)
         const ty = Math.sin(this.frameCount * 0.1 + i * 0.8) * s * 0.15
-        const tr = s * (0.25 - i * 0.06)
+        const tr = s * (0.28 - i * 0.07)
         ctx.beginPath()
         ctx.arc(tx, ty, tr, 0, Math.PI * 2)
         ctx.fill()
       }
 
-      // 灵气粒子
-      ctx.fillStyle = `rgba(200, 230, 255, ${trail * 0.5})`
-      for (let i = 0; i < 4; i++) {
-        const px = -s * (2 + Math.random() * 1.5)
-        const py = Math.sin(this.frameCount * 0.05 + i * 1.2) * s * 0.3
+      ctx.fillStyle = `rgba(240, 210, 140, ${trail * 0.4})`
+      for (let i = 0; i < 5; i++) {
+        const px = -s * (2 + Math.random() * 1.8)
+        const py = Math.sin(this.frameCount * 0.05 + i * 1.2) * s * 0.35
         ctx.beginPath()
-        ctx.arc(px, py, s * 0.1, 0, Math.PI * 2)
+        ctx.arc(px, py, s * 0.12, 0, Math.PI * 2)
         ctx.fill()
       }
     }
@@ -654,9 +873,12 @@ Page({
     this.isGameOver = false
     this.score = 0
     this.frameCount = 0
-    this.player.y = this.h * 0.45
+    this.obstaclesPassed = 0
+    this.gameStarted = false
+    this.player.y = this.h * 0.5
     this.player.vy = 0
     this.obstacles = []
+    this.obstacleSpeed = 2.0
     this.setData({
       gameOver: false,
       score: 0,

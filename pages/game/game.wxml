@@ -3,34 +3,34 @@
     type="2d"
     id="gameCanvas"
     class="game-canvas"
-    bindtouchstart="onTap"
+    bindtap="onTap"
   ></canvas>
 
-  <view class="score-overlay" wx:if="{{!gameOver}}">
-    <text class="score-text">{{score}}</text>
-  </view>
+  <cover-view class="score-overlay" wx:if="{{!gameOver}}">
+    <cover-view class="score-text">{{score}}</cover-view>
+  </cover-view>
 
-  <view class="game-over-overlay" wx:if="{{gameOver}}">
-    <view class="over-panel">
-      <text class="over-title">游 戏 结 束</text>
-      <view class="deco-line"></view>
-      <view class="score-row">
-        <text class="over-label">得分</text>
-        <text class="over-score">{{score}}</text>
-      </view>
-      <view class="score-row" wx:if="{{isNewRecord}}">
-        <text class="record-label">新纪录!</text>
-      </view>
-      <view class="score-row">
-        <text class="over-label">最高分</text>
-        <text class="over-highscore">{{highScore}}</text>
-      </view>
-      <view class="btn-restart" bindtap="onRestart">
-        <text>再 来 一 局</text>
-      </view>
-      <view class="btn-home" bindtap="onHome">
-        <text>返回首页</text>
-      </view>
-    </view>
-  </view>
+  <cover-view class="game-over-overlay" wx:if="{{gameOver}}">
+    <cover-view class="over-panel">
+      <cover-view class="over-title">游 戏 结 束</cover-view>
+      <cover-view class="deco-line"></cover-view>
+      <cover-view class="score-row">
+        <cover-view class="over-label">得分</cover-view>
+        <cover-view class="over-score">{{score}}</cover-view>
+      </cover-view>
+      <cover-view class="score-row" wx:if="{{isNewRecord}}">
+        <cover-view class="record-label">新纪录!</cover-view>
+      </cover-view>
+      <cover-view class="score-row">
+        <cover-view class="over-label">最高分</cover-view>
+        <cover-view class="over-highscore">{{highScore}}</cover-view>
+      </cover-view>
+      <cover-view class="btn-restart" bindtap="onRestart">
+        <cover-view class="btn-r-text">再 来 一 局</cover-view>
+      </cover-view>
+      <cover-view class="btn-home" bindtap="onHome">
+        <cover-view class="btn-h-text">返回首页</cover-view>
+      </cover-view>
+    </cover-view>
+  </cover-view>
 </view>

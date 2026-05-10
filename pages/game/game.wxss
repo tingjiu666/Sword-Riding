@@ -10,25 +10,25 @@
   display: block;
 }
 
+/* === 得分覆盖层 === */
 .score-overlay {
   position: absolute;
   top: 80rpx;
   left: 0;
   width: 100%;
   text-align: center;
-  pointer-events: none;
 }
 
 .score-text {
   font-size: 96rpx;
-  color: rgba(232, 213, 183, 0.9);
+  color: rgba(220, 180, 120, 0.9);
   font-weight: bold;
-  text-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.5), 0 0 40rpx rgba(180, 200, 255, 0.15);
   letter-spacing: 8rpx;
 }
 
+/* === 游戏结束覆盖层 === */
 .game-over-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -36,61 +36,57 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 15, 0.7);
-  backdrop-filter: blur(8px);
+  background: rgba(15, 10, 5, 0.78);
 }
 
 .over-panel {
-  width: 560rpx;
-  padding: 60rpx 40rpx;
-  background: linear-gradient(135deg, rgba(20, 18, 40, 0.95), rgba(35, 30, 55, 0.95));
-  border-radius: 30rpx;
+  width: 520rpx;
+  padding: 56rpx 40rpx;
+  background: #201810;
+  border-radius: 20rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  border: 1px solid rgba(200, 215, 240, 0.1);
-  box-shadow: 0 0 60rpx rgba(100, 120, 180, 0.1);
+  border: 2rpx solid rgba(180, 140, 100, 0.2);
 }
 
 .over-title {
   font-size: 48rpx;
-  color: #e8d5b7;
+  color: #d4b896;
   letter-spacing: 16rpx;
-  margin-bottom: 30rpx;
-  text-shadow: 0 0 30px rgba(232, 213, 183, 0.2);
+  margin-bottom: 28rpx;
 }
 
 .deco-line {
-  width: 160rpx;
+  width: 140rpx;
   height: 2rpx;
-  background: linear-gradient(90deg, transparent, rgba(200, 215, 240, 0.3), transparent);
-  margin-bottom: 40rpx;
+  background: rgba(180, 140, 100, 0.3);
+  margin-bottom: 36rpx;
 }
 
 .score-row {
   display: flex;
   justify-content: center;
   align-items: baseline;
-  gap: 20rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 18rpx;
 }
 
 .over-label {
   font-size: 28rpx;
-  color: rgba(200, 215, 240, 0.5);
+  color: rgba(180, 140, 100, 0.5);
   letter-spacing: 6rpx;
+  margin-right: 16rpx;
 }
 
 .over-score {
-  font-size: 72rpx;
+  font-size: 70rpx;
   color: #ffd700;
   font-weight: bold;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 .over-highscore {
-  font-size: 56rpx;
-  color: #e8d5b7;
+  font-size: 54rpx;
+  color: #d4b896;
   font-weight: bold;
 }
 
@@ -98,40 +94,33 @@
   font-size: 32rpx;
   color: #ff8a6b;
   letter-spacing: 8rpx;
-  text-shadow: 0 0 20px rgba(255, 138, 107, 0.4);
-  animation: pulse 0.8s ease-in-out infinite alternate;
+  margin-bottom: 10rpx;
 }
 
-@keyframes pulse {
-  from { opacity: 0.7; transform: scale(1); }
-  to { opacity: 1; transform: scale(1.05); }
-}
-
+/* === 按钮 === */
 .btn-restart {
-  margin-top: 40rpx;
-  padding: 24rpx 100rpx;
-  background: linear-gradient(135deg, rgba(60, 50, 90, 0.9), rgba(85, 70, 110, 0.9));
+  margin-top: 36rpx;
+  padding: 22rpx 90rpx;
+  background: #5a3d25;
   border-radius: 50rpx;
-  border: 1px solid rgba(200, 215, 240, 0.1);
-  color: #e8d5b7;
-  font-size: 32rpx;
-  letter-spacing: 8rpx;
-  box-shadow: 0 8rpx 32rpx rgba(40, 30, 70, 0.5);
-  transition: transform 0.2s;
+  border: 2rpx solid rgba(200, 150, 80, 0.18);
 }
 
-.btn-restart:active {
-  transform: scale(0.95);
+.btn-r-text {
+  font-size: 32rpx;
+  color: #d4b896;
+  letter-spacing: 8rpx;
 }
 
 .btn-home {
-  margin-top: 20rpx;
-  padding: 16rpx 60rpx;
-  color: rgba(200, 215, 240, 0.4);
-  font-size: 26rpx;
-  letter-spacing: 6rpx;
+  margin-top: 18rpx;
+  padding: 14rpx 56rpx;
+  border-radius: 50rpx;
+  border: 1rpx solid rgba(180, 140, 100, 0.1);
 }
 
-.btn-home:active {
-  opacity: 0.7;
+.btn-h-text {
+  font-size: 26rpx;
+  color: rgba(180, 140, 100, 0.5);
+  letter-spacing: 6rpx;
 }
